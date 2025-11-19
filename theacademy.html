@@ -2,367 +2,349 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Academy - منصة التعلم الآمنة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Academy - Ultimate Edition</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Patrick+Hand&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nsfwjs@latest/dist/nsfwjs.min.js"></script>
     
     <style>
         :root {
-            --primary-color: #0095f6;
-            --secondary-color: #8e8e8e;
-            --bg-color: #fafafa;
-            --card-bg: #ffffff;
-            --border-color: #dbdbdb;
-            --text-color: #262626;
-            --premium-color: #ffd700;
-            --success-color: #4caf50;
-            --warning-color: #ff9800;
-            --danger-color: #f44336;
+            --primary: #2979ff; --accent: #00e5ff; --bg-dark: #0a0a0a; --card-dark: #1e1e1e;
+            --text: #ffffff; --glass: rgba(20, 20, 20, 0.85); --gold: #ffd700; --danger: #ff1744;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 65px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background-color: var(--bg-dark); color: var(--text); padding-bottom: 80px; overflow-x: hidden; min-height: 100vh; }
 
-        /* --- تنسيق الأيقونات والصور الجديدة --- */
-        .custom-icon { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; transition: transform 0.2s; cursor: pointer; }
+        /* === مؤثرات بصرية === */
+        @keyframes breathe { 0%,100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(41,121,255,0.5)); } 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(41,121,255,0.8)); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* === شاشة الدخول === */
+        .login-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #1a237e 0%, #000 95%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        .logo-img { width: 180px; margin-bottom: 30px; animation: breathe 4s infinite ease-in-out; }
+        
+        .login-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+        .login-input { width: 100%; padding: 16px; margin-bottom: 15px; background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 15px; color: white; font-size: 16px; text-align: center; transition: 0.3s; }
+        .login-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(41,121,255,0.3); }
+        
+        .login-btn { width: 100%; padding: 16px; border: none; border-radius: 15px; background: linear-gradient(90deg, var(--primary), #004ecb); color: white; font-weight: 800; font-size: 18px; cursor: pointer; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(41,121,255,0.2); transition: transform 0.1s; }
+        .login-btn:active { transform: scale(0.96); }
+
+        /* أيقونات السوشيال (ضخمة وتملأ الإطار) */
+        .social-login-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .social-btn { background: rgba(255,255,255,0.08); border: 1px solid #555; border-radius: 20px; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .social-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
+        .social-btn img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); z-index: 1; }
+        .social-btn span { font-size: 14px; font-weight: 800; color: #ddd; z-index: 1; }
+
+        /* === الهيدر === */
+        .header { position: fixed; top: 0; left: 0; right: 0; height: 75px; background: rgba(15,15,15,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1000; }
+        .header-icons { display: flex; gap: 15px; }
+        .icon-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 45px; }
+        .custom-icon { width: 32px; height: 32px; object-fit: contain; transition: 0.2s; }
         .custom-icon:hover { transform: scale(1.1); }
-        .custom-icon-lg { width: 35px; height: 35px; }
-        .nav-icon-img { width: 26px; height: 26px; object-fit: contain; }
+        .icon-label { font-size: 10px; color: #aaa; margin-top: 2px; font-weight: bold; }
+        .header-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
+
+        /* === FAHMI-Ai (أسفل اليسار) === */
+        #ai-floating-bubble { position: fixed; bottom: 100px; left: 20px; z-index: 11000; width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 25px var(--accent); overflow: hidden; cursor: pointer; background: black; transition: transform 0.2s; }
+        #ai-floating-bubble video { width: 100%; height: 100%; object-fit: cover; }
+        /* الكتاب البلوري */
+        #ai-book-chat { position: fixed; bottom: 180px; left: 20px; width: 340px; height: 500px; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border-radius: 20px 5px 5px 20px; z-index: 10999; display: none; flex-direction: column; box-shadow: 10px 20px 50px black; transform-origin: bottom left; animation: openBook 0.4s ease; border-left: 12px solid #444; }
+        @keyframes openBook { from { transform: scale(0) rotate(-5deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+        #ai-book-chat.active { display: flex; }
+
+        /* === الآلة الحاسبة (Transparent 3D) === */
+        #floating-calc-container { position: fixed; top: 100px; left: 20px; z-index: 10500; display: none; flex-direction: column; align-items: center; }
+        #calc-bubble { width: 65px; height: 65px; border-radius: 50%; background: #000; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--primary); cursor: grab; overflow: hidden; }
+        #calc-bubble img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* شارة التوثيق والبرو */
-        .verified-badge { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; }
-        .pro-badge { width: 18px; height: 18px; vertical-align: middle; margin-right: 4px; }
-        .role-icon { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; }
-
-        /* --- شاشات الدخول --- */
-        .login-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--card-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
-        .login-logo-img { width: 120px; margin-bottom: 20px; }
-        .login-container { width: 100%; max-width: 350px; text-align: center; }
-        .login-form { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .login-input { width: 100%; padding: 10px; margin-bottom: 10px; background: #fafafa; border: 1px solid var(--border-color); border-radius: 3px; font-size: 14px; }
+        #calc-interface { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); padding: 15px; width: 320px; margin-top: 15px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); transform-origin: top left; transition: 0.3s; }
+        .calc-hidden { display: none !important; }
         
-        /* أزرار الدخول المخصصة */
-        .custom-auth-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: white; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; }
-        .custom-auth-btn:active { transform: scale(0.98); }
-        .custom-auth-btn img { width: 24px; height: 24px; margin-left: 10px; }
+        .calc-display { background: rgba(255,255,255,0.05); padding: 15px; text-align: right; font-size: 32px; border-radius: 10px; margin-bottom: 10px; color: #00e676; font-family: 'Courier New', monospace; overflow-x: auto; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .calculator-body { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .calc-btn { height: 50px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.4); transition: 0.1s; }
+        .calc-btn:active { transform: translateY(5px); box-shadow: none; }
+        .c-num { background: #444; } .c-op { background: var(--primary); } .c-sci { background: #333; font-size: 12px; color: var(--accent); } .c-eq { background: var(--success-color); grid-column: span 2; } .c-del { background: var(--danger); }
+
+        /* === باقي التنسيقات (الأساسية) === */
+        .stories-container { margin-top: 80px; padding: 15px; overflow-x: auto; white-space: nowrap; }
+        .stories { display: flex; gap: 15px; } 
+        .story { width: 75px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .story-avatar { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--primary); padding: 3px; background: linear-gradient(45deg, #f09433, #bc1888); }
+        .story-avatar.premium { border-color: var(--gold); background: linear-gradient(45deg, #ffd700, #ffaa00); }
+        .story-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--bg-dark); }
         
-        .separator { display: flex; align-items: center; margin: 15px 0; color: var(--secondary-color); font-size: 13px; }
-        .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
-
-        /* --- الهيدر --- */
-        .header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1000; }
-        .header-icons, .header-profile { display: flex; align-items: center; gap: 15px; }
-        .header-profile-icon img { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 1px solid var(--border-color); object-fit: cover; }
-
-        /* --- الستوري --- */
-        .stories-container { margin-top: 60px; padding: 15px 0; background: var(--card-bg); border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; }
-        .stories { display: flex; padding: 0 15px; gap: 15px; }
-        .story { display: flex; flex-direction: column; align-items: center; width: 70px; cursor: pointer; position: relative; }
-        .story-avatar { width: 60px; height: 60px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); display: flex; align-items: center; justify-content: center; }
-        .story-avatar.premium-story { background: linear-gradient(45deg, #ffd700, #f7b733, #f5a623, #ffc400); border: 2px solid var(--premium-color); }
-        .story-avatar img { width: 56px; height: 56px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
-        .story-text { font-size: 12px; margin-top: 5px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(0,0,0,0.5); color: white; padding: 2px 5px; border-radius: 5px; position: absolute; bottom: 5px; }
-
-        /* --- المنشورات --- */
-        .feed { padding-bottom: 60px; }
-        .post { background: var(--card-bg); margin: 15px; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; }
-        .post-user { display: flex; align-items: center; gap: 10px; }
-        .post-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        .post-user-info { display: flex; flex-direction: column; }
-        .post-username { font-weight: 600; font-size: 14px; }
-        .post-media { width: 100%; max-height: 500px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .post-media img, .post-media video, .post-media iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
+        .feed-tabs { display: flex; background: var(--card-dark); border-bottom: 1px solid #333; position: sticky; top: 75px; z-index: 900; }
+        .feed-tab { flex: 1; text-align: center; padding: 15px; font-weight: 600; cursor: pointer; color: #888; transition: 0.2s; }
+        .feed-tab.active { color: white; border-bottom: 3px solid var(--primary); }
         
-        .post-actions { padding: 10px 15px; display: flex; justify-content: space-between; }
-        .post-actions-left { display: flex; gap: 15px; align-items: center; }
-        .post-likes { padding: 0 15px; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
-        .post-caption { padding: 0 15px; font-size: 14px; margin-bottom: 5px; white-space: pre-wrap; }
-        .post-time { padding: 0 15px 15px; color: var(--secondary-color); font-size: 10px; text-transform: uppercase; }
+        .post { background: var(--card-dark); margin: 15px; border-radius: 20px; border: 1px solid #333; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .post-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+        .post-username { font-weight: 700; color: white; font-size: 15px; }
+        .post-media { width: 100%; max-height: 500px; background: black; display: flex; align-items: center; justify-content: center; }
+        .post-media img, .post-media video { width: 100%; height: 100%; object-fit: contain; }
+        .post-actions { padding: 15px; display: flex; justify-content: space-between; }
+        .post-action { font-size: 24px; color: #ccc; cursor: pointer; transition: 0.2s; }
+        .post-action:hover { color: var(--primary); transform: scale(1.1); }
+        .post-action.liked { color: var(--danger); }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: #151515; border-top: 1px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: 5px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20%; opacity: 0.6; transition: 0.3s; }
+        .nav-item.active { opacity: 1; transform: translateY(-5px); }
 
-        /* ملفات التحميل والقفل */
-        .file-attachment { display: flex; align-items: center; gap: 10px; padding: 10px 15px; background: #f5f5f5; margin: 10px 15px; border-radius: 8px; }
-        .locked-content { text-align: center; padding: 20px; background: #fff3e0; border: 1px solid #ffe0b2; margin: 10px; border-radius: 8px; }
-        .download-btn { background: var(--primary-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        /* النوافذ (Modals) */
+        .modal { display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { background: #1e1e1e; border-radius: 25px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; transform: translateY(50px); transition: 0.3s; border: 1px solid #444; box-shadow: 0 20px 50px black; }
+        .modal.active .modal-content { transform: translateY(0); }
+        .modal-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; }
+        .modal-body { padding: 20px; }
+        .form-submit { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; margin-top: 15px; font-weight: 800; cursor: pointer; font-size: 16px; }
 
-        /* --- شريط التنقل السفلي --- */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-color); text-decoration: none; font-size: 22px; }
-
-        /* --- النوافذ المنبثقة (Modals) --- */
-        .modal { display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s 0.3s; }
-        .modal.active { opacity: 1; visibility: visible; transition-delay: 0s; }
-        .modal-content { background: var(--card-bg); border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; transform: translateY(20px) scale(0.95); transition: transform 0.3s ease-out; }
-        .modal.active .modal-content { transform: translateY(0) scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: 600; }
-        .modal-body { padding: 15px; overflow-y: auto; flex: 1; }
-        .modal-close { cursor: pointer; font-size: 20px; }
-
-        /* --- شاشة انقطاع النت --- */
-        #offline-screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 4000; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #offline-screen img { width: 150px; margin-bottom: 20px; opacity: 0.8; }
-
-        /* --- الدردشة --- */
-        .chat-container { margin-top: 60px; height: calc(100vh - 120px); display: flex; flex-direction: column; }
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 70%; padding: 10px 15px; border-radius: 18px; font-size: 14px; }
-        .message.sent { align-self: flex-end; background: var(--primary-color); color: white; }
-        .message.received { align-self: flex-start; background: #e0e0e0; color: black; }
-        .chat-input-container { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; }
-        .form-input, .form-textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-color); }
-        .record-btn.recording { background: var(--danger-color); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); } 100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); } }
-
-        /* --- الآلة الحاسبة --- */
-        .calculator-body { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .calc-display { grid-column: 1 / -1; background: #eee; padding: 15px; text-align: left; font-size: 24px; border-radius: 5px; margin-bottom: 10px; min-height: 50px; }
-        .calc-btn { padding: 15px 5px; border: none; border-radius: 5px; cursor: pointer; background: #e0e0e0; font-weight: bold; font-size: 16px; }
-        .calc-btn:active { background: #ccc; }
-
-        /* --- الأدوات الأخرى --- */
-        .whiteboard-container { width: 100%; height: 400px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: white; touch-action: none; }
+        /* سلة الحذف */
+        #drag-trash { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; background: rgba(255, 23, 68, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; z-index: 9998; transition: 0.3s; border: 2px dashed white; }
+        #drag-trash.visible { bottom: 30px; } #drag-trash.hover { transform: translateX(-50%) scale(1.2); background: red; }
+        
+        /* تنسيقات إضافية */
+        .profile-header { text-align: center; padding: 20px; background: #222; border-radius: 15px; margin-bottom: 15px; }
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); margin-bottom: 10px; }
+        .profile-stats { display: flex; justify-content: space-around; margin: 15px 0; }
+        .profile-tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        .profile-tool-btn { background: #2a2a2a; padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #444; }
+        .upgrade-btn { background: linear-gradient(45deg, #ffd700, #f57f17); color: black; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
-
-    <div id="offline-screen">
-        <img src="https://i.ibb.co/ccXXZG65/3-D-Icon-for-the-Academy-with-Globe-and-Books-20251118-034305-0000-removebg-preview.png" alt="No Internet">
-        <h3>لا يوجد اتصال بالإنترنت</h3>
-        <p>يرجى التحقق من الشبكة للوصول إلى الأكاديمية.</p>
-    </div>
+    <div id="drag-trash"><i class="fas fa-trash-alt"></i></div>
 
     <div class="login-screen" id="login-screen">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:24px; cursor:pointer; background:rgba(255,255,255,0.1); padding:10px; border-radius:50%;" id="lang-btn-login">
+            <i class="fas fa-globe"></i>
+        </div>
+        
         <div class="login-container">
-            <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" alt="The Academy" class="login-logo-img">
-            <div class="login-form">
-                <input type="text" class="login-input" placeholder="البريد الإلكتروني" id="login-email">
-                <input type="password" class="login-input" placeholder="كلمة المرور" id="login-password">
+            <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" class="logo-img">
+            
+            <div class="login-card">
+                <h2 style="margin-bottom: 25px; font-weight:800;">مرحباً بك 👋</h2>
                 
-                <button id="login-btn" class="custom-auth-btn" style="background: #0095f6; color: white; border:none;">
-                    <img src="https://i.ibb.co/zKrpcSC/Contemporary-3-D-Logout-Button-with-Open-Door-20251118-045534-0000-removebg-preview.png" style="filter: brightness(0) invert(1);">
-                    تسجيل الدخول
-                </button>
-
-                <div class="separator">أو المتابعة باستخدام</div>
-
-                <button id="google-login" class="custom-auth-btn">
-                    <img src="https://i.ibb.co/TM3pyNMS/Design-sans-titre-20251118-051823-0000-removebg-preview.png" alt="Google">
-                    Google
-                </button>
-
-                <button id="phone-login-btn" class="custom-auth-btn">
-                    <img src="https://i.ibb.co/fzgxjxZG/Picsart-25-11-19-01-04-41-248.png" alt="Phone">
-                    رقم الهاتف
-                </button>
-            </div>
-            <div style="margin-top: 15px;">
-                <a href="#" id="show-signup" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">إنشاء حساب جديد</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="login-screen" id="signup-screen" style="display: none;">
-        <div class="login-container">
-            <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" alt="The Academy" class="login-logo-img">
-            <div class="login-form">
-                <input type="text" class="login-input" placeholder="الاسم الكامل" id="signup-name">
-                <input type="text" class="login-input" placeholder="اسم المستخدم" id="signup-username">
-                <input type="email" class="login-input" placeholder="البريد الإلكتروني" id="signup-email">
-                <input type="password" class="login-input" placeholder="كلمة المرور" id="signup-password">
-                <select class="login-input" id="signup-role">
-                    <option value="student">طالب</option>
-                    <option value="teacher">أستاذ</option>
-                </select>
-                <button class="custom-auth-btn" id="signup-btn" style="background: var(--primary-color); color: white;">إنشاء حساب</button>
-                <div class="separator">أو</div>
-                <button class="custom-auth-btn" id="google-signup-btn"><img src="https://i.ibb.co/TM3pyNMS/Design-sans-titre-20251118-051823-0000-removebg-preview.png"> Google</button>
-            </div>
-            <a href="#" id="show-login" style="color: var(--primary-color); font-weight: 600;">لديك حساب؟ تسجيل الدخول</a>
-        </div>
-    </div>
-
-    <div class="app-content" id="app-content" style="display: none;">
-        <div class="header">
-            <div class="header-icons">
-                <img src="https://i.ibb.co/VWj1JxJ3/Tech-brand-logo-in-blue-and-silver-20251118-044834-0000-removebg-preview.png" id="fahmi-ai-btn" class="custom-icon custom-icon-lg" title="FAHMI-AI">
-                <img src="https://i.ibb.co/8gWRwLPx/The-Academy-Logo-Turquoise-and-Orange-20251118-033143-0000-removebg-preview.png" id="calculator-btn" class="custom-icon" title="الآلة الحاسبة">
-                <img src="https://i.ibb.co/21ZjVJ4z/Logo-for-Educational-App-with-Inviting-Impact-20251118-031818-0000-removebg-preview.png" id="sticky-notes-btn" class="custom-icon" title="ملاحظاتي">
-                <img src="https://i.ibb.co/vCPdJCtv/Creative-Drawing-Tablet-Icon-for-Educational-App-20251118-034000-0000-removebg-preview.png" id="whiteboard-btn" class="custom-icon" title="اللوحة البيضاء">
+                <input type="email" id="login-email" class="login-input" placeholder="البريد الإلكتروني">
+                <input type="password" id="login-password" class="login-input" placeholder="كلمة المرور">
+                <div style="text-align: right; margin-bottom: 20px; font-size: 13px; color: var(--accent); cursor: pointer; text-decoration: underline;" id="forgot-pass-btn">نسيت كلمة المرور؟</div>
+                
+                <button id="do-login-btn" class="login-btn-main">تسجيل الدخول</button>
+                
+                <div style="display: flex; align-items: center; gap: 10px; color: #888; font-size: 13px; margin: 25px 0;">
+                    <div style="flex:1; height:1px; background:#444;"></div>أو تابع عبر<div style="flex:1; height:1px; background:#444;"></div>
+                </div>
+                
+                <div class="social-login-grid">
+                    <div class="social-btn" id="google-login-btn">
+                        <img src="https://i.ibb.co/TM3pyNMS/Design-sans-titre-20251118-051823-0000-removebg-preview.png">
+                        <span>Google</span>
+                    </div>
+                    <div class="social-btn" id="phone-login-btn">
+                        <img src="https://i.ibb.co/fzgxjxZG/Picsart-25-11-19-01-04-41-248.png">
+                        <span>الهاتف</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="header-profile">
-                <img src="https://i.ibb.co/DH91xKVL/3-D-Modern-Logout-Button-for-The-Academy-20251118-045251-0000-removebg-preview.png" id="create-post-header-btn" class="custom-icon" title="إضافة منشور">
-                <div class="header-profile-icon" id="user-profile-btn">
-                    <img src="https://i.ibb.co/mr1C35Mp/Profile-Icon-for-Educational-App-20251118-041433-0000-removebg-preview.png" id="header-user-avatar" alt="Profile">
+            <div style="margin-top: 30px; font-size: 16px;">
+                جديد؟ <span id="go-to-signup" style="color: var(--accent); font-weight: bold; cursor: pointer; text-decoration: underline;">إنشاء حساب</span>
+            </div>
+        </div>
+    </div>
+    <div class="login-screen" id="signup-screen" style="display: none;">
+        <div class="login-container">
+            <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" class="logo-img" style="width: 120px;">
+            <div class="login-card">
+                <h2>حساب جديد</h2>
+                <input type="text" id="signup-name" class="login-input" placeholder="الاسم الكامل">
+                <input type="text" id="signup-username" class="login-input" placeholder="اسم المستخدم">
+                <input type="email" id="signup-email" class="login-input" placeholder="البريد الإلكتروني">
+                <input type="password" id="signup-password" class="login-input" placeholder="كلمة المرور">
+                <select id="signup-role" class="login-input" style="background:#222; color:white;">
+                    <option value="student">طالب 🎓</option>
+                    <option value="teacher">أستاذ 👨‍🏫</option>
+                </select>
+                <button id="do-signup-btn" class="login-btn-main">إنشاء الحساب</button>
+            </div>
+            <div style="margin-top: 20px;"><span id="go-to-login" style="color: var(--accent); cursor: pointer;">لديك حساب؟ دخول</span></div>
+        </div>
+    </div>
+
+    <div class="app-content" id="app-content">
+        <div class="header">
+            <div class="header-icons">
+                <div class="icon-container" id="header-calc-btn">
+                    <img src="https://i.ibb.co/8gWRwLPx/The-Academy-Logo-Turquoise-and-Orange-20251118-033143-0000-removebg-preview.png" class="custom-icon">
+                    <span class="icon-label">حاسبة</span>
                 </div>
+                <div class="icon-container" id="sticky-notes-btn">
+                    <img src="https://i.ibb.co/21ZjVJ4z/Logo-for-Educational-App-with-Inviting-Impact-20251118-031818-0000-removebg-preview.png" class="custom-icon">
+                    <span class="icon-label">نوت</span>
+                </div>
+                <div class="icon-container" id="lang-btn-app">
+                    <i class="fas fa-globe" style="font-size: 22px; color: #ccc;"></i>
+                    <span class="icon-label">لغة</span>
+                </div>
+            </div>
+            <div class="logo">Academy</div>
+            <div class="header-profile">
+                <div class="icon-container" id="messages-btn"><img src="https://i.ibb.co/m56tj0Nr/Educational-App-Icon-The-Academy-in-Pastels-20251118-042547-0000-removebg-preview.png" class="custom-icon"><span class="icon-label">شات</span></div>
+                <div class="header-profile-icon" id="user-profile-btn"><img src="https://i.pravatar.cc/35?img=5" id="header-user-avatar"></div>
             </div>
         </div>
 
         <div id="home-page">
-            <div class="stories-container" id="stories-list">
-                <div class="stories">
+            <div class="stories-container">
+                <div class="stories" id="stories-list">
                     <div class="story" id="add-story-btn">
-                        <div class="story-avatar" style="background: #ddd; border: 2px dashed #888;">
-                            <i class="fas fa-plus" style="color: #888;"></i>
-                        </div>
-                        <div class="story-text">قصتك</div>
+                        <div class="story-avatar-add"><i class="fas fa-plus"></i></div>
+                        <div class="story-username">قصتك</div>
                     </div>
                 </div>
+            </div>
+            <div class="feed-tabs">
+                <div class="feed-tab active" data-filter="all">الكل</div>
+                <div class="feed-tab" data-filter="teachers">أساتذة</div>
+                <div class="feed-tab" data-filter="vip" style="color: var(--gold);"><i class="fas fa-crown"></i> VIP</div>
             </div>
             <div class="feed" id="feed-container"></div>
         </div>
 
-        <div id="search-page" style="display: none; margin-top: 70px; padding: 15px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <img src="https://i.ibb.co/GvtC4FHL/Dynamic-Logo-for-Educational-App-Featuring-Magnifying-Glass-20251118-033503-0000-removebg-preview.png" class="custom-icon-lg">
-                <input type="text" class="form-input" style="margin:0;" placeholder="ابحث عن أصدقاء، أساتذة..." id="search-input">
+        <div id="search-page" style="display: none;">
+            <div class="search-container" style="padding: 20px; margin-top: 70px;">
+                <input type="text" class="login-input" id="search-input" placeholder="ابحث...">
+                <div id="search-results"></div>
             </div>
-            <div id="search-results"></div>
         </div>
-
         <div id="chat-page" style="display: none;">
             <div class="chat-container">
+                <div class="chat-header">مجموعة الدراسة</div>
                 <div class="chat-messages" id="chat-messages"></div>
                 <div class="chat-input-container">
-                    <button class="custom-auth-btn" style="width: auto; padding: 5px;">
-                        <img src="https://i.ibb.co/dJx6XJNW/Educational-App-Logo-The-Academy-in-Gradient-Blues-and-Yellow-20251118-052311-0000-removebg-preview.png">
-                    </button>
-                    <input type="text" class="form-input" style="margin:0;" id="chat-message-input" placeholder="اكتب رسالة...">
-                    <button id="send-message-btn" style="background:none; border:none; cursor:pointer;"><i class="fas fa-paper-plane" style="font-size: 20px; color: var(--primary-color);"></i></button>
-                    <button id="record-audio-btn" class="record-btn" style="background:none; border:none; cursor:pointer;"><i class="fas fa-microphone" style="font-size: 20px;"></i></button>
+                    <input type="text" class="chat-input" id="chat-message-input" placeholder="اكتب...">
+                    <button class="send-btn" id="send-message-btn"><i class="fas fa-paper-plane"></i></button>
+                    <button class="record-btn" id="record-audio-btn"><i class="fas fa-microphone"></i></button>
                 </div>
+            </div>
+        </div>
+        <div id="leaderboard-page" style="display: none;">
+            <div class="leaderboard-container" style="padding: 20px; margin-top: 70px;">
+                <h2>🏆 المتصدرين</h2><div id="leaderboard-list"></div>
             </div>
         </div>
 
         <div class="bottom-nav">
-            <a href="#" class="nav-item" data-page="home-page"><i class="fas fa-home"></i></a>
-            <a href="#" class="nav-item" data-page="search-page">
-                <img src="https://i.ibb.co/GvtC4FHL/Dynamic-Logo-for-Educational-App-Featuring-Magnifying-Glass-20251118-033503-0000-removebg-preview.png" class="nav-icon-img">
-            </a>
-            <a href="#" class="nav-item" id="create-post-nav-btn">
-                <img src="https://i.ibb.co/xSSPhYyX/Trendy-3-D-Share-Icon-Designs-for-The-Academy-20251118-043618-0000-removebg-preview.png" class="nav-icon-img" style="width: 32px; height: 32px;">
-            </a>
-            <a href="#" class="nav-item" data-page="chat-page">
-                <img src="https://i.ibb.co/m56tj0Nr/Educational-App-Icon-The-Academy-in-Pastels-20251118-042547-0000-removebg-preview.png" class="nav-icon-img">
-            </a>
-            <a href="#" class="nav-item" id="referral-btn" title="نشر التطبيق">
-                <img src="https://i.ibb.co/V0Lzz9w3/3-D-Share-Icon-for-Educational-App-20251118-044001-0000-removebg-preview.png" class="nav-icon-img">
-            </a>
+            <div class="nav-item active" data-page="home-page"><img src="https://i.ibb.co/xSSPhYyX/Trendy-3-D-Share-Icon-Designs-for-The-Academy-20251118-043618-0000-removebg-preview.png" class="custom-icon"><span class="icon-label">الرئيسية</span></div>
+            <div class="nav-item" data-page="search-page"><img src="https://i.ibb.co/GvtC4FHL/Dynamic-Logo-for-Educational-App-Featuring-Magnifying-Glass-20251118-033503-0000-removebg-preview.png" class="custom-icon"><span class="icon-label">بحث</span></div>
+            <div class="nav-item" id="create-post-nav-btn"><img src="https://i.ibb.co/DH91xKVL/3-D-Modern-Logout-Button-for-The-Academy-20251118-045251-0000-removebg-preview.png" class="custom-icon" style="width: 50px; height: 50px;"></div>
+            <div class="nav-item" data-page="chat-page"><img src="https://i.ibb.co/Ndrf6DVr/Comment-Button-Icon-for-The-Academy-20251118-052424-0000-removebg-preview.png" class="custom-icon"><span class="icon-label">شات</span></div>
+            <div class="nav-item" data-page="leaderboard-page"><img src="https://i.ibb.co/RptcGjDd/Emblem-Logo-for-Educational-App-The-Academy-20251118-042052-0000-removebg-preview.png" class="custom-icon"><span class="icon-label">جوائز</span></div>
         </div>
     </div>
 
-    <div class="modal" id="fahmi-ai-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="https://i.ibb.co/VWj1JxJ3/Tech-brand-logo-in-blue-and-silver-20251118-044834-0000-removebg-preview.png" width="30">
-                    المساعد الذكي
-                </div>
-                <span class="modal-close" data-modal="fahmi-ai-modal">×</span>
+    <div id="ai-floating-bubble">
+        <video autoplay loop muted playsinline>
+            <source src="https://res.cloudinary.com/dmhtx93nj/video/upload/v1/grok_video_2025-11-18-05-04-50_o8us8r.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div id="ai-book-chat">
+        <div class="modal-header" style="background:transparent; border:none;">
+            <span style="color:var(--primary); font-weight:bold;">FAHMI-Ai</span><i class="fas fa-times" id="close-ai-chat" style="cursor:pointer; color:#333;"></i>
+        </div>
+        <div id="ai-messages" style="flex:1; padding:15px; overflow-y:auto; color:#333; font-family:'Courier New';"></div>
+        <div style="padding:10px; display:flex; gap:5px;">
+            <input type="text" id="ai-input" placeholder="اسألني..." style="flex:1; border:1px solid #ccc; padding:8px; border-radius:20px;">
+            <button id="ai-send-btn" style="background:var(--primary); border:none; width:35px; height:35px; border-radius:50%; color:white;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="floating-calc-container">
+        <div id="calc-bubble"><img src="https://i.ibb.co/8gWRwLPx/The-Academy-Logo-Turquoise-and-Orange-20251118-033143-0000-removebg-preview.png"></div>
+        <div id="calc-interface" class="calc-hidden">
+            <div class="modal-header" style="border:none; padding:5px; color:white;">
+                <div class="modal-title">Calc</div>
+                <div style="display:flex; gap:10px;"><i class="fas fa-minus" id="min-calc-btn" style="cursor:pointer;"></i><i class="fas fa-times" id="close-calc-btn" style="cursor:pointer; color:var(--danger);"></i></div>
             </div>
-            <div class="modal-body" style="text-align: center;">
-                <video src="https://res.cloudinary.com/dmhtx93nj/video/upload/v1/grok_video_2025-11-18-05-04-50_o8us8r.mp4" controls autoplay style="width: 100%; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></video>
-                <p style="font-size: 14px; line-height: 1.6;">مرحباً بك في <strong>FAHMI-Ai</strong>. المساعد الذكي المخصص لطلاب الأكاديمية. اسألني عن أي شيء في دروسك!</p>
-                <div style="margin-top: 20px; padding: 10px; background: #f0f8ff; border-radius: 8px;">
-                    <p style="font-size: 12px; color: #666;">(الخدمة قيد التطوير حالياً - هذا عرض توضيحي)</p>
-                </div>
+            <div class="calc-paper"><div id="calc-result">0</div></div>
+            <div style="text-align:center; margin-bottom:10px;"><button id="toggle-sci-btn" style="background:none; border:none; color:var(--accent);">🔽 علمي</button></div>
+            <div id="calc-sci-panel" style="display:none; grid-template-columns:repeat(5,1fr); gap:5px; margin-bottom:10px;">
+                <button class="c-btn c-sci" data-op="sin">sin</button><button class="c-btn c-sci" data-op="cos">cos</button><button class="c-btn c-sci" data-op="tan">tan</button><button class="c-btn c-sci" data-op="log">log</button><button class="c-btn c-sci" data-op="sqrt">√</button>
+            </div>
+            <div class="calculator-body">
+                <button class="c-btn c-del" data-op="C">C</button><button class="c-btn c-op" data-op="/">&divide;</button><button class="c-btn c-op" data-op="*">&times;</button><button class="c-btn c-del" data-op="back">&larr;</button>
+                <button class="c-btn c-num" data-val="7">7</button><button class="c-btn c-num" data-val="8">8</button><button class="c-btn c-num" data-val="9">9</button><button class="c-btn c-op" data-op="-">-</button>
+                <button class="c-btn c-num" data-val="4">4</button><button class="c-btn c-num" data-val="5">5</button><button class="c-btn c-num" data-val="6">6</button><button class="c-btn c-op" data-op="+">+</button>
+                <button class="c-btn c-num" data-val="1">1</button><button class="c-btn c-num" data-val="2">2</button><button class="c-btn c-num" data-val="3">3</button><button class="c-btn c-eq" data-op="=">=</button>
+                <button class="c-btn c-num" data-val="0" style="grid-column:span 2;">0</button><button class="c-btn c-num" data-val=".">.</button>
             </div>
         </div>
     </div>
 
     <div class="modal" id="profile-modal">
         <div class="modal-content">
-            <div class="modal-header">الملف الشخصي <span class="modal-close" data-modal="profile-modal">×</span></div>
-            <div class="modal-body">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                    <img src="https://i.ibb.co/mr1C35Mp/Profile-Icon-for-Educational-App-20251118-041433-0000-removebg-preview.png" id="modal-profile-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
-                    <div>
-                        <div id="modal-profile-name" style="font-weight: bold; font-size: 18px; display: flex; align-items: center;"></div>
-                        <div id="modal-profile-role" style="color: #888; font-size: 14px;"></div>
+            <div class="modal-header"><div class="modal-title">ملفي</div><div class="modal-close" data-modal="profile-modal">×</div></div>
+            <div class="modal-body" style="padding:0;">
+                <div class="profile-header">
+                    <img src="" class="profile-avatar" id="modal-profile-avatar">
+                    <h3 id="modal-profile-name" style="margin-bottom:5px;">...</h3>
+                    <button class="upgrade-btn" id="upgrade-btn" style="margin:auto;">
+                        <img src="https://i.ibb.co/k7XKHgB/Modern-Flat-Premium-App-Icon-with-Crown-20251118-035148-0000-removebg-preview.png"> ترقية PRO
+                    </button>
+                    <div class="profile-stats">
+                        <div class="profile-stat"><div class="stat-count" id="modal-points-count">0</div><div class="stat-label">نقاط</div></div>
+                        <div class="profile-stat"><div class="stat-count">0</div><div class="stat-label">متابع</div></div>
                     </div>
                 </div>
-                <button id="upgrade-btn" class="custom-auth-btn" style="background: #fff8e1; border-color: #ffc107;">
-                    <img src="https://i.ibb.co/k7XKHgB/Modern-Flat-Premium-App-Icon-with-Crown-20251118-035148-0000-removebg-preview.png">
-                    الترقية إلى PRO
-                </button>
-                <button id="logout-btn" class="custom-auth-btn" style="color: var(--danger-color); margin-top: 10px;">تسجيل الخروج</button>
+                <div class="profile-tools-grid">
+                    <div class="profile-tool-item" id="profile-notes-btn"><img src="https://i.ibb.co/21ZjVJ4z/Logo-for-Educational-App-with-Inviting-Impact-20251118-031818-0000-removebg-preview.png"><span>ملاحظات</span></div>
+                    <div class="profile-tool-item" id="profile-whiteboard-btn"><img src="https://i.ibb.co/vCPdJCtv/Creative-Drawing-Tablet-Icon-for-Educational-App-20251118-034000-0000-removebg-preview.png"><span>سبورة</span></div>
+                </div>
+                <div class="profile-actions">
+                    <button class="form-submit" id="edit-profile-btn" style="background:#444;">تعديل</button>
+                    <button class="form-submit" id="logout-btn" style="background:var(--danger);">خروج</button>
+                </div>
+                <div class="profile-posts" id="modal-profile-posts"></div>
             </div>
         </div>
     </div>
 
     <div class="modal" id="create-post-modal">
         <div class="modal-content">
-            <div class="modal-header">منشور جديد <span class="modal-close" data-modal="create-post-modal">×</span></div>
+            <div class="modal-header"><div class="modal-title">نشر</div><div class="modal-close" data-modal="create-post-modal">×</div></div>
             <div class="modal-body">
-                <textarea id="post-content-input" class="form-input" placeholder="بم تفكر؟" style="height: 100px; resize: none;"></textarea>
-                <div style="display: flex; justify-content: space-around; margin-top: 10px;">
-                    <label style="cursor: pointer; text-align: center;">
-                        <img src="https://i.ibb.co/FkPtFpsd/Polished-3-D-Logout-Button-with-Shadow-Depth-20251118-050713-0000-removebg-preview.png" class="custom-icon-lg">
-                        <div style="font-size: 12px;">ملف/صورة</div>
-                        <input type="file" id="post-file-input" hidden>
-                    </label>
-                </div>
-                <button id="submit-post-btn" class="form-submit" style="margin-top: 20px; background: var(--primary-color); color: white; width: 100%; padding: 10px; border: none; border-radius: 5px;">نشر</button>
+                <textarea class="login-input" id="post-content-input" placeholder="اكتب..." style="height:100px;"></textarea>
+                <input type="file" id="post-file-input" class="login-input">
+                <div id="post-upload-progress" style="display:none;">جاري الرفع...</div>
+                <button class="form-submit" id="submit-post-btn">نشر</button>
             </div>
         </div>
     </div>
-
-    <div class="modal" id="calculator-modal">
-        <div class="modal-content">
-            <div class="modal-header">الآلة الحاسبة <span class="modal-close" data-modal="calculator-modal">×</span></div>
-            <div class="modal-body">
-                <div class="calculator-body">
-                    <div class="calc-display" id="calc-display">0</div>
-                    <button class="calc-btn">C</button><button class="calc-btn">/</button><button class="calc-btn">*</button><button class="calc-btn">-</button>
-                    <button class="calc-btn">7</button><button class="calc-btn">8</button><button class="calc-btn">9</button><button class="calc-btn">+</button>
-                    <button class="calc-btn">4</button><button class="calc-btn">5</button><button class="calc-btn">6</button><button class="calc-btn">=</button>
-                    <button class="calc-btn">1</button><button class="calc-btn">2</button><button class="calc-btn">3</button><button class="calc-btn">0</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="sticky-notes-modal">
-        <div class="modal-content">
-            <div class="modal-header">ملاحظاتي <span class="modal-close" data-modal="sticky-notes-modal">×</span></div>
-            <div class="modal-body">
-                <button style="width:100%; padding:10px; margin-bottom:10px;" onclick="alert('إضافة ملاحظة جديدة')">إضافة ملاحظة +</button>
-                <div id="note-list-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="whiteboard-modal">
-        <div class="modal-content">
-            <div class="modal-header">اللوحة البيضاء <span class="modal-close" data-modal="whiteboard-modal">×</span></div>
-            <div class="modal-body">
-                <div class="whiteboard-container"><canvas id="whiteboard-canvas"></canvas></div>
-                <button style="margin-top:10px; width:100%; padding:10px;" id="clear-whiteboard">مسح</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="phone-login-modal">
-        <div class="modal-content">
-            <div class="modal-header">تسجيل الدخول بالهاتف <span class="modal-close" data-modal="phone-login-modal">×</span></div>
-            <div class="modal-body">
-                <input type="tel" id="phone-number-input" class="form-input" placeholder="+216...">
-                <div id="recaptcha-container"></div>
-                <button id="send-otp-btn" class="custom-auth-btn" style="background:var(--primary-color); color:white;">إرسال الرمز</button>
-                <div id="otp-section" style="display:none; margin-top:10px;">
-                    <input type="text" id="otp-input" class="form-input" placeholder="الرمز">
-                    <button id="confirm-otp-btn" class="custom-auth-btn" style="background:var(--primary-color); color:white;">تأكيد</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    
+    <div class="modal" id="sticky-notes-modal"> <div class="modal-content"><div class="modal-header">ملاحظات</div><div class="modal-body"><button id="add-new-note-btn" class="form-submit">+ جديد</button><div id="note-list-container"></div></div></div> </div>
+    <div class="modal" id="note-editor-modal"> <div class="modal-content"><div class="modal-header">تعديل</div><div class="modal-body"><input id="note-title-input" class="login-input"><textarea id="note-content-input" class="login-input" style="height:200px;"></textarea></div></div> </div>
+    <div class="modal" id="whiteboard-modal"> <div class="modal-content"><div class="modal-header">سبورة</div><div class="modal-body"><canvas id="whiteboard-canvas"></canvas></div></div> </div>
+    <div class="modal" id="lang-modal"> <div class="modal-content"><div class="modal-header">اللغة</div><div class="modal-body"><button onclick="setLang('ar')" class="form-submit">العربية</button><button onclick="setLang('en')" class="form-submit">English</button></div></div> </div>
+    <div class="modal" id="story-modal"> <div class="modal-content"><div class="modal-header">قصة</div><div class="modal-body"><input id="story-text-input" class="login-input"><button id="save-story-btn" class="form-submit">نشر</button></div></div> </div>
+    <div class="modal" id="reset-password-modal"> <div class="modal-content"><div class="modal-header">استعادة</div><div class="modal-body"><input id="reset-email-input" class="login-input"><button id="send-reset-btn" class="form-submit">إرسال</button></div></div> </div>
+    <div class="modal" id="edit-profile-modal"> <div class="modal-content"><div class="modal-header">تعديل</div><div class="modal-body"><input id="edit-name-input" class="login-input"><button id="save-profile-btn" class="form-submit">حفظ</button></div></div> </div>
+    <div class="modal" id="upgrade-modal"> <div class="modal-content"><div class="modal-header">ترقية</div><div class="modal-body"><p>تواصل معنا</p></div></div> </div>
     <script>
-        // تهيئة Firebase
+        // 1. إعدادات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyB-fNvLU-1CdlgwjG4Nst3FGTAezEmlGdA",
             authDomain: "the-academy-b3316.firebaseapp.com",
@@ -370,44 +352,33 @@
             projectId: "the-academy-b3316",
             storageBucket: "the-academy-b3316.firebasestorage.app",
             messagingSenderId: "780594810246",
-            appId: "1:780594810246:web:4af762ceb98120752db007"
+            appId: "1:780594810246:web:4af762ceb98120752db007",
+            measurementId: "G-QPET9CS9ES"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        const storage = firebase.storage();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // روابط الصور المخصصة (من ImgBB)
-        const ICONS = {
-            student: "https://i.ibb.co/YBBp722K/Minimalist-Student-Icon-with-Graduation-Cap-20251118-040248-0000-removebg-preview.png",
-            teacher: "https://i.ibb.co/kVbWH6fk/Flat-Vector-Logo-for-the-Academy-20251118-041222-0000-removebg-preview.png",
-            verified: "https://i.ibb.co/RptcGjDd/Emblem-Logo-for-Educational-App-The-Academy-20251118-042052-0000-removebg-preview.png",
-            pro: "https://i.ibb.co/Swx4H8HP/Pro-User-Icon-for-the-Academy-App-20251118-035938-0000-removebg-preview.png",
-            like: "https://i.ibb.co/zH8jgTT4/Heart-on-Graduation-Cap-Clean-Design-20251118-042257-0000-removebg-preview.png",
-            comment: "https://i.ibb.co/PvVLwm2F/Feedback-Button-Icon-with-Comment-Text-20251118-042444-0000-removebg-preview.png",
-            download: "https://i.ibb.co/FkPtFpsd/Polished-3-D-Logout-Button-with-Shadow-Depth-20251118-050713-0000-removebg-preview.png",
-            locked: "https://i.ibb.co/B2nCh1d4/Teal-and-Orange-Logout-Icon-20251118-045906-0000-removebg-preview.png"
-        };
+        // 2. إعدادات Cloudinary & AI
+        const CLOUD_NAME = "dmhtx93rq"; 
+        const UPLOAD_PRESET = "the_academy_upload"; 
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+        const GEMINI_API_KEY = "AIzaSy..."; // ضع مفتاحك
 
-        // متغيرات الحالة
-        let currentUser = null;
-        let userData = null;
-        let isPremiumUser = false;
+        let currentUser = null, userData = null, isPremiumUser = false;
 
-        // التحقق من الاتصال
-        window.addEventListener('offline', () => document.getElementById('offline-screen').style.display = 'flex');
-        window.addEventListener('online', () => document.getElementById('offline-screen').style.display = 'none');
-
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
+            
             // المصادقة
-            auth.onAuthStateChanged((user) => {
+            auth.onAuthStateChanged(user => {
                 if (user) {
+                    if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                        alert('يرجى تأكيد الإيميل'); user.sendEmailVerification(); auth.signOut(); return;
+                    }
                     currentUser = user;
                     loadUserData(user.uid);
                     document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('signup-screen').style.display = 'none';
                     document.getElementById('app-content').style.display = 'block';
                 } else {
                     document.getElementById('login-screen').style.display = 'flex';
@@ -415,157 +386,175 @@
                 }
             });
 
-            // تحميل بيانات المستخدم
             function loadUserData(uid) {
-                db.ref('users/' + uid).on('value', (snapshot) => {
-                    userData = snapshot.val();
-                    if (userData) {
+                db.ref('users/' + uid).on('value', snap => {
+                    userData = snap.val();
+                    if(userData) {
                         isPremiumUser = userData.isPremium || false;
-                        updateUIWithUserData();
-                        loadPosts();
+                        if(document.getElementById('header-user-avatar'))
+                            document.getElementById('header-user-avatar').src = userData.avatar || 'https://i.pravatar.cc/80';
+                        document.getElementById('modal-profile-name').textContent = userData.name;
+                        document.getElementById('modal-profile-avatar').src = userData.avatar;
+                        loadPosts(); loadStories();
                     }
                 });
             }
 
-            // تحديث الواجهة والشارات
-            function updateUIWithUserData() {
-                const avatar = userData.avatar || 'https://i.ibb.co/mr1C35Mp/Profile-Icon-for-Educational-App-20251118-041433-0000-removebg-preview.png';
-                document.getElementById('header-user-avatar').src = avatar;
-                document.getElementById('modal-profile-avatar').src = avatar;
-                
-                const nameContainer = document.getElementById('modal-profile-name');
-                let badgesHTML = '';
-                
-                // شارة الدور
-                const roleIcon = userData.role === 'teacher' ? ICONS.teacher : ICONS.student;
-                badgesHTML += `<img src="${roleIcon}" class="role-icon"> `;
-                
-                // شارة التوثيق (5000 متابع)
-                const followersCount = userData.followers ? Object.keys(userData.followers).length : 0;
-                if (followersCount >= 5000) {
-                    badgesHTML += `<img src="${ICONS.verified}" class="verified-badge" title="موثق">`;
-                }
-
-                // شارة PRO
-                if (userData.isPremium) {
-                    badgesHTML += `<img src="${ICONS.pro}" class="pro-badge" title="PRO">`;
-                    document.getElementById('upgrade-btn').style.display = 'none';
-                }
-
-                nameContainer.innerHTML = `${userData.name} ${badgesHTML}`;
-                document.getElementById('modal-profile-role').textContent = userData.role === 'teacher' ? 'أستاذ' : 'طالب';
-            }
-
-            // تسجيل الدخول
-            document.getElementById('login-btn').addEventListener('click', () => {
+            // أزرار الدخول
+            document.getElementById('do-login-btn').onclick = () => {
                 const e = document.getElementById('login-email').value;
                 const p = document.getElementById('login-password').value;
-                auth.signInWithEmailAndPassword(e, p).catch(alert);
-            });
-
-            document.getElementById('signup-btn').addEventListener('click', () => {
-                const e = document.getElementById('signup-email').value;
-                const p = document.getElementById('signup-password').value;
-                const n = document.getElementById('signup-name').value;
-                const r = document.getElementById('signup-role').value;
+                if(!e || !p) return alert('الرجاء ملء البيانات');
+                auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
+            };
+            document.getElementById('google-login-btn').onclick = () => auth.signInWithPopup(googleProvider);
+            document.getElementById('forgot-pass-btn').onclick = () => document.getElementById('reset-password-modal').classList.add('active');
+            document.getElementById('send-reset-btn').onclick = () => {
+                const email = document.getElementById('reset-email-input').value;
+                if(email) auth.sendPasswordResetEmail(email).then(() => alert('تم إرسال الرابط')).catch(e => alert(e.message));
+            };
+            
+            // إنشاء حساب (مع الصور الافتراضية)
+            document.getElementById('do-signup-btn').onclick = () => {
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const pass = document.getElementById('signup-password').value;
+                const role = document.getElementById('signup-role').value;
                 
-                auth.createUserWithEmailAndPassword(e, p).then(cred => {
+                if(!name || !email || !pass) return alert('أكمل البيانات');
+                
+                const avatar = role === 'teacher' ? 
+                    'https://i.ibb.co/kVbWH6fk/Flat-Vector-Logo-for-the-Academy-20251118-041222-0000-removebg-preview.png' : 
+                    'https://i.ibb.co/YBBp722K/Minimalist-Student-Icon-with-Graduation-Cap-20251118-040248-0000-removebg-preview.png';
+
+                auth.createUserWithEmailAndPassword(email, pass).then(cred => {
+                    cred.user.sendEmailVerification();
                     db.ref('users/' + cred.user.uid).set({
-                        name: n, email: e, role: r, createdAt: Date.now()
+                        name, email, role, avatar,
+                        createdAt: Date.now(), engagementPoints: 0, isPremium: false
                     });
-                }).catch(alert);
-            });
-
-            document.getElementById('google-login').addEventListener('click', () => auth.signInWithPopup(googleProvider));
-            document.getElementById('google-signup-btn').addEventListener('click', () => auth.signInWithPopup(googleProvider));
-
-            // التنقل والنوافذ
-            const pages = document.querySelectorAll('[id$="-page"]');
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    if(this.id === 'create-post-nav-btn' || this.id === 'referral-btn') return;
-                    e.preventDefault();
-                    pages.forEach(p => p.style.display = 'none');
-                    document.getElementById(this.dataset.page).style.display = 'block';
-                });
-            });
-
-            // فتح النوافذ
-            const openModal = (id) => document.getElementById(id).classList.add('active');
-            const closeModal = (id) => document.getElementById(id).classList.remove('active');
-            
-            document.getElementById('fahmi-ai-btn').onclick = () => openModal('fahmi-ai-modal');
-            document.getElementById('calculator-btn').onclick = () => openModal('calculator-modal');
-            document.getElementById('sticky-notes-btn').onclick = () => openModal('sticky-notes-modal');
-            document.getElementById('whiteboard-btn').onclick = () => openModal('whiteboard-modal');
-            document.getElementById('user-profile-btn').onclick = () => openModal('profile-modal');
-            document.getElementById('create-post-header-btn').onclick = () => openModal('create-post-modal');
-            document.getElementById('create-post-nav-btn').onclick = (e) => { e.preventDefault(); openModal('create-post-modal'); };
-            
-            document.querySelectorAll('.modal-close').forEach(btn => {
-                btn.onclick = function() { closeModal(this.dataset.modal); };
-            });
-
-            document.getElementById('logout-btn').onclick = () => auth.signOut();
-
-            // نشر بوست بسيط
-            document.getElementById('submit-post-btn').onclick = () => {
-                const content = document.getElementById('post-content-input').value;
-                if(content) {
-                    db.ref('posts').push({
-                        content: content,
-                        userId: currentUser.uid,
-                        userName: userData.name,
-                        userRole: userData.role,
-                        userAvatar: userData.avatar || 'https://i.ibb.co/mr1C35Mp/Profile-Icon-for-Educational-App-20251118-041433-0000-removebg-preview.png',
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        isPremium: isPremiumUser
-                    });
-                    closeModal('create-post-modal');
-                    document.getElementById('post-content-input').value = '';
-                }
+                    alert('تم الإنشاء! راجع بريدك.');
+                }).catch(e => alert(e.message));
             };
 
-            // تحميل البوستات
-            function loadPosts() {
-                db.ref('posts').orderByChild('timestamp').limitToLast(20).on('child_added', snapshot => {
-                    const post = snapshot.val();
-                    const feed = document.getElementById('feed-container');
-                    const el = document.createElement('div');
-                    el.className = 'post';
-                    
-                    let userBadges = '';
-                    if (post.userRole === 'teacher') userBadges += `<img src="${ICONS.teacher}" class="role-icon">`;
-                    else userBadges += `<img src="${ICONS.student}" class="role-icon">`;
-                    if (post.isPremium) userBadges += `<img src="${ICONS.pro}" class="pro-badge">`;
+            // تنقل الصفحات
+            document.getElementById('go-to-signup').onclick = () => { document.getElementById('login-screen').style.display='none'; document.getElementById('signup-screen').style.display='flex'; };
+            document.getElementById('go-to-login').onclick = () => { document.getElementById('signup-screen').style.display='none'; document.getElementById('login-screen').style.display='flex'; };
 
-                    el.innerHTML = `
-                        <div class="post-header">
-                            <div class="post-user">
-                                <img src="${post.userAvatar}" class="post-avatar">
-                                <div>
-                                    <div class="post-username">${post.userName} ${userBadges}</div>
-                                    <div class="post-time">الآن</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="post-caption">${post.content}</div>
-                        <div class="post-actions">
-                            <div class="post-actions-left">
-                                <img src="${ICONS.like}" class="custom-icon">
-                                <img src="${ICONS.comment}" class="custom-icon">
-                            </div>
-                        </div>
-                    `;
-                    feed.prepend(el);
+            // الآلة الحاسبة (Widget)
+            const calcFull = document.getElementById('calc-full');
+            const calcMini = document.getElementById('calc-minimized');
+            const trash = document.getElementById('drag-trash');
+            
+            document.getElementById('header-calc-btn').onclick = () => {
+                document.getElementById('floating-calc-container').style.display = 'flex';
+                calcFull.style.display = 'block';
+                calcMini.style.display = 'none';
+            };
+            document.getElementById('min-calc-btn').onclick = () => {
+                calcFull.style.display = 'none'; calcMini.style.display = 'flex';
+            };
+            document.getElementById('close-calc-btn').onclick = () => document.getElementById('floating-calc-container').style.display = 'none';
+            
+            // سحب الكرة (Drag & Drop to Trash)
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+            const container = document.getElementById('floating-calc-container');
+            
+            calcMini.addEventListener('touchstart', e => {
+                isDragging = false;
+                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                initialLeft = container.offsetLeft; initialTop = container.offsetTop;
+                trash.classList.add('visible');
+                
+                const move = ev => {
+                    isDragging = true; ev.preventDefault();
+                    const dx = ev.touches[0].clientX - startX;
+                    const dy = ev.touches[0].clientY - startY;
+                    container.style.left = `${initialLeft + dx}px`; container.style.top = `${initialTop + dy}px`;
+                    const tr = trash.getBoundingClientRect(); const t = ev.touches[0];
+                    if(t.clientX >= tr.left && t.clientX <= tr.right && t.clientY >= tr.top) trash.classList.add('hover');
+                    else trash.classList.remove('hover');
+                };
+                const end = () => {
+                    document.removeEventListener('touchmove', move);
+                    trash.classList.remove('visible');
+                    if(trash.classList.contains('hover')) { container.style.display = 'none'; trash.classList.remove('hover'); }
+                };
+                document.addEventListener('touchmove', move, {passive: false});
+                document.addEventListener('touchend', end);
+            });
+            calcMini.addEventListener('click', () => { if(!isDragging) { calcMini.style.display = 'none'; calcFull.style.display = 'block'; } });
+
+            // منطق الحساب
+            let calcExpr = "";
+            document.querySelectorAll('.c-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const op = btn.dataset.op; const val = btn.dataset.val;
+                    if(val) calcExpr += val;
+                    else if(op === 'C') calcExpr = "";
+                    else if(op === 'back') calcExpr = calcExpr.slice(0,-1);
+                    else if(op === '=') {
+                        try { document.getElementById('calc-result').innerText = eval(calcExpr.replace(/sin/g,'Math.sin').replace(/sqrt/g,'Math.sqrt')); calcExpr = document.getElementById('calc-result').innerText; }
+                        catch { document.getElementById('calc-result').innerText = "Error"; }
+                    } else calcExpr += op;
+                    document.getElementById('calc-result').innerText = calcExpr || "0";
+                });
+            });
+            document.getElementById('toggle-sci-btn').onclick = () => {
+                const p = document.getElementById('calc-sci-panel');
+                p.style.display = p.style.display === 'grid' ? 'none' : 'grid';
+            };
+
+            // FAHMI-Ai
+            const aiBubble = document.getElementById('ai-floating-bubble');
+            const aiChat = document.getElementById('ai-book-chat');
+            aiBubble.onclick = () => aiChat.classList.toggle('active');
+            document.getElementById('close-ai-chat').onclick = () => aiChat.classList.remove('active');
+            
+            // الرفع (Cloudinary)
+            window.uploadFile = function(file, content, videoUrl) {
+                const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET);
+                const xhr = new XMLHttpRequest(); xhr.open('POST', CLOUDINARY_URL, true);
+                xhr.onload = () => { if(xhr.status===200) { const r=JSON.parse(xhr.responseText); savePost(content, videoUrl, r.secure_url, file.type, r.original_filename, r.bytes); } };
+                xhr.send(fd);
+            };
+            function savePost(content, videoUrl, fileUrl, type, name, size) {
+                db.ref('posts').push().set({
+                    content, videoUrl, fileUrl, fileType: type, fileName: name, fileSize: size,
+                    userId: currentUser.uid, userName: userData.name, userAvatar: userData.avatar,
+                    isPremium: isPremiumUser, timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => { alert('تم النشر!'); document.getElementById('create-post-modal').classList.remove('active'); });
+            }
+            document.getElementById('submit-post-btn').onclick = () => {
+                const content = document.getElementById('post-content-input').value;
+                const file = document.getElementById('post-file-input').files[0];
+                if(file) uploadFile(file, content, ''); else savePost(content, '', null, null, null, null);
+            };
+
+            // عرض المنشورات
+            function loadPosts() {
+                db.ref('posts').limitToLast(20).on('value', snap => {
+                    const feed = document.getElementById('feed-container'); feed.innerHTML = '';
+                    const posts = snap.val();
+                    if(posts) Object.keys(posts).reverse().forEach(id => {
+                        const p = posts[id];
+                        feed.innerHTML += `<div class="post"><div class="post-header"><img src="${p.userAvatar}" class="post-avatar"> <b>${p.userName}</b></div>${p.fileUrl ? `<div class="post-media"><img src="${p.fileUrl}"></div>` : ''}<div class="post-caption">${p.content}</div></div>`;
+                    });
                 });
             }
 
-            // زر الإحالة
-            document.getElementById('referral-btn').onclick = () => {
-                if(navigator.share) navigator.share({title:'The Academy', url:window.location.href});
-                else alert('تم نسخ الرابط!');
-            };
+            // النوافذ والأزرار
+            document.getElementById('create-post-nav-btn').onclick = () => document.getElementById('create-post-modal').classList.add('active');
+            document.getElementById('user-profile-btn').onclick = () => document.getElementById('profile-modal').classList.add('active');
+            document.querySelectorAll('.modal-close').forEach(b => b.onclick = function() { this.closest('.modal').classList.remove('active'); });
+            document.getElementById('lang-btn-login').onclick = () => document.getElementById('lang-modal').classList.add('active');
+            document.getElementById('lang-btn-app').onclick = () => document.getElementById('lang-modal').classList.add('active');
+            
+            window.setLang = (lang) => { document.dir = (lang==='ar')?'rtl':'ltr'; document.getElementById('lang-modal').classList.remove('active'); };
+
+            showPage('home-page');
+            function showPage(p) { document.getElementById('home-page').style.display = (p==='home-page') ? 'block' : 'none'; }
+            navItems.forEach(item => item.onclick = (e) => { e.preventDefault(); showPage(item.dataset.page); });
         });
     </script>
 </body>
