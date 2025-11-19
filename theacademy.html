@@ -2,616 +2,240 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Academy - منصة التعلم الآمنة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Academy - Elite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Patrick+Hand&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nsfwjs@latest/dist/nsfwjs.min.js"></script>
     
     <style>
         :root {
-            --primary-color: #0095f6;
-            --secondary-color: #8e8e8e;
-            --bg-color: #fafafa;
-            --card-bg: #ffffff;
-            --border-color: #dbdbdb;
-            --text-color: #262626;
-            --premium-color: #ffd700;
-            --success-color: #4caf50;
-            --warning-color: #ff9800;
-            --danger-color: #f44336;
+            --primary: #2979ff; --accent: #00e5ff; --bg-dark: #050505; --card-dark: #1e1e1e;
+            --text: #ffffff; --glass: rgba(20, 20, 20, 0.9); --gold: #ffd700; --danger: #ff1744;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 60px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background-color: var(--bg-dark); color: var(--text); padding-bottom: 80px; overflow-x: hidden; min-height: 100vh; }
 
-        /* شاشات الدخول */
-        .login-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--card-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
-        .login-container { width: 100%; max-width: 350px; text-align: center; }
-        .logo-large { font-size: 40px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .login-form { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .login-input { width: 100%; padding: 10px; margin-bottom: 10px; background: #fafafa; border: 1px solid var(--border-color); border-radius: 3px; font-size: 14px; }
-        .login-btn { width: 100%; padding: 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; margin-bottom: 15px; }
-        .separator { display: flex; align-items: center; margin: 15px 0; color: var(--secondary-color); font-size: 13px; }
-        .separator::before, .separator::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
-        .separator::before { margin-left: 10px; }
-        .separator::after { margin-right: 10px; }
-        .signup-link { color: var(--primary-color); font-weight: 600; text-decoration: none; font-size: 14px; }
-        .app-content { display: none; }
+        /* شاشة الدخول */
+        .login-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1a237e 0%, #000 90%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        .logo-img { width: 180px; margin-bottom: 40px; filter: drop-shadow(0 0 20px rgba(41,121,255,0.5)); animation: breathe 3s infinite; }
+        @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        .login-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .login-input { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.4); border: 1px solid #555; border-radius: 15px; color: white; font-size: 16px; text-align: center; }
+        .login-btn-main { width: 100%; height: 60px; border: none; border-radius: 15px; background: linear-gradient(90deg, var(--primary), #004ecb); color: white; font-weight: 800; font-size: 20px; cursor: pointer; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(41,121,255,0.3); }
+        
+        /* أيقونات التسجيل العملاقة */
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .social-btn { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 20px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: 0.2s; }
+        .social-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
+        .social-btn img { width: 65px; height: 65px; object-fit: contain; filter: drop-shadow(0 4px 8px black); }
+        .social-btn span { font-size: 14px; font-weight: bold; color: #ccc; }
 
         /* الهيدر */
-        .header { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1000; }
-        .logo { font-size: 22px; font-weight: 700; background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: absolute; right: 50%; transform: translateX(50%); }
-        .header-icons, .header-profile { display: flex; align-items: center; gap: 15px; }
-        .header-icon { font-size: 20px; cursor: pointer; }
-        .header-profile-icon img { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 1px solid var(--border-color); }
+        .header { position: fixed; top: 0; left: 0; right: 0; height: 75px; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1000; }
+        .header-icons { display: flex; gap: 15px; }
+        .custom-icon { width: 30px; height: 30px; object-fit: contain; }
+        .header-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); }
 
-        /* الستوري */
-        .stories-container { margin-top: 60px; padding: 15px 0; background: var(--card-bg); border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; }
-        .stories { display: flex; padding: 0 15px; gap: 15px; }
-        .story { display: flex; flex-direction: column; align-items: center; width: 70px; cursor: pointer; position: relative; }
-        .story-avatar { width: 60px; height: 60px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); display: flex; align-items: center; justify-content: center; }
-        .story-avatar.premium-story { background: linear-gradient(45deg, #ffd700, #f7b733, #f5a623, #ffc400); border: 2px solid var(--premium-color); }
-        .story-avatar img { width: 56px; height: 56px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
-        .story-avatar-add { width: 60px; height: 60px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--secondary-color); }
-        .story-avatar-add i { color: var(--secondary-color); font-size: 20px; }
-        .story-text { font-size: 12px; margin-top: 5px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(0,0,0,0.5); color: white; padding: 2px 5px; border-radius: 5px; position: absolute; bottom: 5px; }
-        .story-username { font-size: 12px; margin-top: 5px; }
+        /* FAHMI-Ai (أسفل اليسار) */
+        #ai-floating-bubble { position: fixed; bottom: 100px; left: 20px; z-index: 11000; width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 25px var(--accent); overflow: hidden; cursor: pointer; background: black; }
+        #ai-floating-bubble video { width: 100%; height: 100%; object-fit: cover; }
+        /* كتاب المحادثة */
+        #ai-book-chat { position: fixed; bottom: 180px; left: 20px; width: 340px; height: 500px; background: rgba(255,255,255,0.95); border-radius: 20px 5px 5px 20px; z-index: 10999; display: none; flex-direction: column; box-shadow: 10px 20px 50px black; transform-origin: bottom left; animation: openBook 0.4s ease; border-left: 15px solid #444; }
+        @keyframes openBook { from { transform: scale(0) rotate(-5deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+        #ai-book-chat.active { display: flex; }
 
-        /* التبويبات */
-        .feed-tabs { display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-        .feed-tab { flex: 1; text-align: center; padding: 15px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
-        .feed-tab.active { border-bottom-color: var(--text-color); }
+        /* الآلة الحاسبة (Modal) */
+        .calculator-body { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .calc-display { grid-column: 1 / -1; background: #222; color: #00e676; padding: 20px; text-align: left; font-size: 32px; border-radius: 10px; margin-bottom: 10px; font-family: 'Courier New', monospace; overflow-x: auto; }
+        .calc-btn { height: 55px; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+        .calc-btn:active { transform: translateY(4px); box-shadow: none; }
+        .c-num { background: #444; } .c-op { background: var(--primary); } .c-sci { background: #333; font-size: 12px; color: var(--accent); } .c-eq { background: var(--success-color); grid-column: span 2; } .c-del { background: var(--danger); }
 
-        /* المنشورات */
-        .feed { padding-bottom: 60px; }
-        .post { background: var(--card-bg); margin: 15px; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; }
-        .post-user { display: flex; align-items: center; gap: 10px; }
-        .post-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        .post-user-info { display: flex; flex-direction: column; }
-        .post-username { font-weight: 600; font-size: 14px; }
-        .post-user-type { font-size: 11px; color: var(--secondary-color); }
-        .premium-badge { background: var(--premium-color); color: #000; padding: 2px 6px; border-radius: 10px; font-size: 9px; font-weight: bold; margin-right: 5px; }
-        .post-more { cursor: pointer; }
-        .post-media { width: 100%; max-height: 500px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .post-media img, .post-media video, .post-media iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
-        .post-media iframe { min-height: 315px; object-fit: contain; }
-        .post-image { width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: var(--secondary-color); }
-        .post-actions { padding: 10px 15px; display: flex; justify-content: space-between; }
-        .post-actions-left { display: flex; gap: 15px; }
-        .post-action { font-size: 24px; cursor: pointer; transition: transform 0.2s; }
-        .post-action:hover { transform: scale(1.1); }
-        .post-action.liked { color: var(--danger-color); }
-        .post-likes { padding: 0 15px; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
-        .post-caption { padding: 0 15px; font-size: 14px; margin-bottom: 5px; white-space: pre-wrap; }
-        .post-caption .username { font-weight: 600; margin-left: 5px; }
-        .post-comments { padding: 0 15px; color: var(--secondary-color); font-size: 14px; margin-bottom: 10px; cursor: pointer; }
-        .post-time { padding: 0 15px 15px; color: var(--secondary-color); font-size: 10px; text-transform: uppercase; }
-
-        /* شريط التنقل السفلي */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-color); text-decoration: none; font-size: 22px; }
-        .nav-item.active { color: var(--primary-color); }
-
-        /* صفحة الملف الشخصي */
-        .profile-header { padding: 20px 15px 15px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-        .profile-info { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
-        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); }
-        .profile-stats { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .profile-stat { display: flex; flex-direction: column; align-items: center; }
-        .stat-count { font-weight: 600; font-size: 16px; }
-        .stat-label { font-size: 12px; color: var(--secondary-color); }
-        .profile-bio { font-size: 14px; margin-bottom: 10px; }
-        .profile-tabs { display: flex; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-        .profile-tab { flex: 1; text-align: center; padding: 15px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
-        .profile-tab.active { border-bottom-color: var(--text-color); }
-        .profile-posts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-        .profile-post { aspect-ratio: 1; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: var(--secondary-color); }
-        .profile-post img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-actions { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        /* زر الترقية */
-        .upgrade-btn { background: linear-gradient(45deg, #ffd700, #f7b733); color: #000; border: none; padding: 8px 15px; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        /* واجهة الترقية */
-        .upgrade-modal-body { text-align: center; }
-        .upgrade-modal-body h2 { color: var(--premium-color); font-size: 24px; margin-bottom: 10px; }
-        .upgrade-modal-body ul { list-style: none; padding: 0; margin: 20px 0; text-align: right; }
-        .upgrade-modal-body li { font-size: 16px; margin-bottom: 10px; }
-        .upgrade-modal-body .fas { color: var(--success-color); margin-left: 10px; }
-
-        /* النوافذ المنبثقة (CSS التحريك الجديد) */
-        .modal {
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0s 0.3s;
-        }
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
-            transition-delay: 0s;
-        }
-        .modal-content {
-            background: var(--card-bg);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(20px) scale(0.95);
-            transition: transform 0.3s ease-out;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        .modal.active .modal-content {
-            transform: translateY(0) scale(1);
-        }
-        .modal-content-full { width: 100%; height: 100%; max-height: 100vh; border-radius: 0; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--card-bg); z-index: 10; border-radius: 12px 12px 0 0; }
-        .modal-title { font-weight: 600; }
-        .modal-close { cursor: pointer; font-size: 20px; }
-        .modal-body { padding: 15px; overflow-y: auto; flex: 1; }
-
-        /* تخصيصات تعليمية */
-        .file-attachment { display: flex; align-items: center; gap: 10px; padding: 10px 15px; background: #f5f5f5; margin: 10px 15px; border-radius: 8px; }
-        .file-icon { font-size: 20px; color: var(--primary-color); }
-        .file-info { flex: 1; }
-        .file-name { font-weight: 600; font-size: 14px; }
-        .file-size { font-size: 12px; color: var(--secondary-color); }
-        .download-btn { background: var(--primary-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
-        .premium-lock { color: var(--premium-color); margin-left: 5px; }
-        .content-warning { background: #ffebee; color: #c62828; padding: 10px; margin: 10px 15px; border-radius: 5px; font-size: 12px; text-align: center; border: 1px solid #ffcdd2; }
-        .report-btn { color: var(--danger-color); font-size: 12px; cursor: pointer; margin-top: 5px; }
-
-        /* نظام الجوائز */
-        .award-section { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 20px; margin: 15px; border-radius: 10px; text-align: center; }
-        .award-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-        .award-description { font-size: 14px; margin-bottom: 15px; }
-        .award-prize { display: flex; justify-content: center; gap: 20px; margin-top: 15px; }
-        .prize-item { text-align: center; }
-        .prize-icon { font-size: 40px; margin-bottom: 10px; }
-        .prize-name { font-size: 14px; font-weight: 600; }
-
-        /* الاستمارات */
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-color); color: var(--text-color); font-family: inherit; }
-        .form-textarea { min-height: 100px; resize: vertical; }
-        .form-submit { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
-
-        /* صفحة الدردشة (مع زر المايك) */
-        .chat-container { margin-top: 60px; height: calc(100vh - 120px); display: flex; flex-direction: column; }
-        .chat-header { padding: 15px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .chat-header-info { display: flex; align-items: center; gap: 10px; }
-        .chat-header-icons { display: flex; gap: 15px; font-size: 18px; }
-        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 70%; padding: 10px 15px; border-radius: 18px; font-size: 14px; line-height: 1.4; }
-        .message.sent { align-self: flex-end; background: var(--primary-color); color: white; border-bottom-right-radius: 5px; }
-        .message.received { align-self: flex-start; background: var(--border-color); color: var(--text-color); border-bottom-left-radius: 5px; }
-        .message audio { width: 100%; max-width: 250px; }
-        .chat-input-container { padding: 15px; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; }
-        .chat-input { flex: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 25px; background: var(--bg-color); color: var(--text-color); }
-        .send-btn { background: var(--primary-color); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
-        .record-btn { background: var(--secondary-color); }
-        .record-btn.recording { background: var(--danger-color); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); } 100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); } }
-        #recording-timer { flex: 1; text-align: center; color: var(--danger-color); font-weight: 600; display: none; }
-
-        /* صفحة البحث */
-        .search-container { margin-top: 60px; padding: 15px; }
-        .search-bar { width: 100%; padding: 12px 20px; border: 1px solid var(--border-color); border-radius: 25px; margin-bottom: 20px; }
-        .search-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
-        .search-tab { padding: 10px 15px; cursor: pointer; border-bottom: 2px solid transparent; }
-        .search-tab.active { border-bottom-color: var(--primary-color); color: var(--primary-color); }
-        .search-results { display: flex; flex-direction: column; gap: 10px; }
-        .search-result { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border-color); }
-        .result-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-        .result-info { flex: 1; }
-        .result-name { font-weight: 600; margin-bottom: 5px; }
-        .result-details { font-size: 12px; color: var(--secondary-color); }
-        .follow-btn { background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 12px; cursor: pointer; }
-        .follow-btn.following { background: var(--secondary-color); }
-
-        /* صفحة المتميزين */
-        .leaderboard-container { margin-top: 60px; padding: 15px; }
-        .leaderboard-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--card-bg); border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); }
-        .leaderboard-rank { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; }
-        .leaderboard-user { flex: 1; }
-        .leaderboard-score { font-weight: 600; color: var(--premium-color); }
+        /* باقي التنسيقات */
+        .modal { display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { background: #1e1e1e; border-radius: 20px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; transform: translateY(50px); transition: 0.3s; border: 1px solid #333; }
+        .modal.active .modal-content { transform: translateY(0); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: #121212; border-top: 1px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 20%; }
+        .form-submit { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
         
-        /* الآلة الحاسبة العلمية (جديد) */
-        .calculator-body {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 أعمدة */
-            gap: 8px;
-        }
-        .calc-display {
-            grid-column: 1 / -1;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            text-align: left;
-            font-size: 28px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            min-height: 60px;
-            word-wrap: break-word;
-            word-break: break-all;
-        }
-        .calc-btn {
-            padding: 15px 5px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background: #e0e0e0;
-            color: var(--text-color);
-            font-weight: 600;
-        }
-        .calc-btn.operator { background: var(--warning-color); color: #000; }
-        .calc-btn.clear { background: var(--danger-color); color: white; }
-        .calc-btn.num { background: #f0f0f0; }
-        .calc-btn.equal { background: var(--success-color); color: white; grid-row: span 2; }
-        .calc-btn.zero { grid-column: span 2; }
-
-        /* الملاحظات اللاصقة (تعديل: مع عنوان) */
-        .sticky-notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 15px; }
-        .sticky-note { background: #ffeb3b; padding: 15px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); min-height: 150px; position: relative; display: flex; flex-direction: column; }
-        .sticky-note-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; border-bottom: 1px dashed rgba(0,0,0,0.3); }
-        .sticky-note-title { border: none; background: transparent; font-weight: 600; font-size: 16px; width: 100%; padding: 5px; }
-        .sticky-note-title:focus { outline: none; background: rgba(255,255,255,0.5); }
-        .sticky-note-actions { display: flex; gap: 5px; }
-        .sticky-note-action { background: none; border: none; cursor: pointer; font-size: 14px; padding: 5px; }
-        .sticky-note-action:hover { background: rgba(0,0,0,0.1); border-radius: 5px; }
-        .sticky-note-content { width: 100%; flex: 1; min-height: 100px; border: none; background: transparent; resize: none; font-family: inherit; font-size: 15px; padding-top: 10px; }
-        .sticky-note-content:focus { outline: none; background: rgba(255,255,255,0.5); }
-
-        /* اللوحة البيضاء */
-        .whiteboard-container { width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: white; touch-action: none; }
-        #whiteboard-canvas { width: 100%; height: 100%; }
-        .whiteboard-tools { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); }
-        .whiteboard-tool { padding: 8px 12px; border: 1px solid var(--border-color); background: white; border-radius: 5px; cursor: pointer; }
-        .whiteboard-tool.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-
-        /* نظام التحميل السريع */
-        .upload-speed-indicator { padding: 10px; background: #e8f5e8; border-radius: 5px; margin-bottom: 10px; text-align: center; font-weight: 600; }
-        .upload-speed-rocket { background: #d4edda; color: #155724; animation: rocketPulse 1s infinite; }
-        @keyframes rocketPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
-        /* الوضع الداكن */
-        @media (prefers-color-scheme: dark) {
-            :root { --bg-color: #000; --card-bg: #121212; --border-color: #363636; --text-color: #f5f5f5; --secondary-color: #a8a8a8; }
-            .sticky-note { background: #424242; color: #f5f5f5; }
-            .sticky-note-title { color: #f5f5f5; }
-            .whiteboard-tool { background: var(--bg-color); color: var(--text-color); }
-            .whiteboard-container { background: #f0f0f0; }
-        }
+        /* تصميم المنشورات والستوري */
+        .stories-container { margin-top: 80px; padding: 10px; overflow-x: auto; white-space: nowrap; }
+        .stories { display: flex; gap: 10px; } .story { width: 75px; display: flex; flex-direction: column; align-items: center; }
+        .story-avatar { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--primary); padding: 3px; }
+        .story-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .feed { padding-bottom: 80px; } .post { background: #1e1e1e; margin: 15px; border-radius: 15px; border: 1px solid #333; overflow: hidden; }
+        .post-media img, .post-media video { width: 100%; max-height: 500px; object-fit: contain; background: black; }
+        
+        /* تحسينات الملاحظات */
+        .sticky-note { background: #ffeb3b; padding: 15px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); margin-bottom: 10px; color: #333; }
     </style>
 </head>
 <body>
     <div class="login-screen" id="login-screen">
+        <div style="position:absolute; top:20px; right:20px; color:white; font-size:24px; cursor:pointer;" id="lang-btn-login">
+            <i class="fas fa-globe"></i>
+        </div>
+        
         <div class="login-container">
-            <div class="logo-large">The Academy</div>
-            <div class="login-form">
-                <input type="text" class="login-input" placeholder="البريد الإلكتروني" id="login-email">
-                <input type="password" class="login-input" placeholder="كلمة المرور" id="login-password">
-                <button class="login-btn" id="login-btn">تسجيل الدخول</button>
-                <div class="separator">أو</div>
-                <button class="login-btn" style="background: #4285f4;" id="google-login">
-                    <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
-                </button>
-                <button class="login-btn" style="background: #007bff;" id="phone-login-btn">
-                    <i class="fas fa-phone"></i> المتابعة برقم الهاتف
-                </button>
+            <div class="logo-container">
+                <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" class="logo-img">
             </div>
-            <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; text-align: center;">
-                <span style="font-size: 14px;">ليس لديك حساب؟</span>
-                <a href="#" class="signup-link" id="show-signup"> إنشاء حساب</a>
+            
+            <div class="login-card">
+                <h2 style="margin-bottom: 25px; font-weight:800;">تسجيل الدخول</h2>
+                
+                <input type="email" id="login-email" class="login-input" placeholder="البريد الإلكتروني">
+                <input type="password" id="login-password" class="login-input" placeholder="كلمة المرور">
+                
+                <div style="text-align: right; margin-bottom: 15px; font-size: 13px; color: var(--primary); cursor: pointer;" id="forgot-pass-btn">نسيت كلمة المرور؟</div>
+                
+                <button id="do-login-btn" class="login-btn-main">دخــول</button>
+                
+                <div style="display: flex; align-items: center; gap: 10px; color: #aaa; font-size: 12px; margin: 20px 0;">
+                    <div style="flex:1; height:1px; background:#444;"></div>أو<div style="flex:1; height:1px; background:#444;"></div>
+                </div>
+                
+                <div class="social-grid">
+                    <div class="social-btn" id="google-login-btn">
+                        <img src="https://i.ibb.co/TM3pyNMS/Design-sans-titre-20251118-051823-0000-removebg-preview.png">
+                        <span>Google</span>
+                    </div>
+                    <div class="social-btn" id="phone-login-btn">
+                        <img src="https://i.ibb.co/fzgxjxZG/Picsart-25-11-19-01-04-41-248.png">
+                        <span>الهاتف</span>
+                    </div>
+                </div>
             </div>
-            <div style="margin-top: 20px; font-size: 12px; color: var(--secondary-color);">
-                <p>بالتسجيل، فإنك توافق على <strong>شروط الاستخدام</strong> و<strong>سياسة المحتوى الآمن</strong>.</p>
+            
+            <div style="margin-top: 30px; font-size: 15px;">
+                ليس لديك حساب؟ <span id="go-to-signup" style="color: var(--accent); font-weight: bold; cursor: pointer;">إنشاء حساب</span>
             </div>
         </div>
     </div>
 
     <div class="login-screen" id="signup-screen" style="display: none;">
         <div class="login-container">
-            <div class="logo-large">The Academy</div>
-            <div class="login-form">
-                <input type="text" class="login-input" placeholder="الاسم الكامل" id="signup-name">
-                <input type="text" class="login-input" placeholder="اسم المستخدم" id="signup-username">
-                <input type="email" class="login-input" placeholder="البريد الإلكتروني" id="signup-email">
-                <input type="password" class="login-input" placeholder="كلمة المرور" id="signup-password">
-                <select class="login-input" id="signup-role">
-                    <option value="">اختر دورك</option>
-                    <option value="student">طالب</option>
-                    <option value="teacher">أستاذ</option>
+            <img src="https://i.ibb.co/3gBxKCK/Colorful-Educational-App-Logo-with-Books-20251117-023518-0000-removebg-preview.png" class="logo-img" style="width: 100px;">
+            <div class="login-card">
+                <h2>حساب جديد</h2>
+                <input type="text" id="signup-name" class="login-input" placeholder="الاسم الكامل">
+                <input type="text" id="signup-username" class="login-input" placeholder="اسم المستخدم">
+                <input type="email" id="signup-email" class="login-input" placeholder="البريد">
+                <input type="password" id="signup-password" class="login-input" placeholder="كلمة المرور">
+                <select id="signup-role" class="login-input" style="background:#333; color:white;">
+                    <option value="student">طالب 🎓</option>
+                    <option value="teacher">أستاذ 👨‍🏫</option>
                 </select>
-                <button class="login-btn" id="signup-btn">إنشاء حساب</button>
-                <div class="separator">أو</div>
-                <button class="login-btn" style="background: #4285f4;" id="google-signup-btn">
-                    <i class="fab fa-google"></i> المتابعة باستخدام Google
-                </button>
-                <button class="login-btn" style="background: #007bff;" id="phone-signup-btn">
-                    <i class="fas fa-phone"></i> المتابعة برقم الهاتف
-                </button>
+                <button id="do-signup-btn" class="login-btn-main">إنشاء الحساب</button>
             </div>
-            <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; text-align: center;">
-                <span style="font-size: 14px;">لديك حساب بالفعل؟</span>
-                <a href="#" class="signup-link" id="show-login"> تسجيل الدخول</a>
-            </div>
+            <div style="margin-top: 20px;"><span id="go-to-login" style="color: var(--accent); cursor: pointer;">لديك حساب؟ دخول</span></div>
         </div>
     </div>
 
     <div class="app-content" id="app-content">
         <div class="header">
             <div class="header-icons">
-                <i class="header-icon fas fa-robot" id="fahmi-ai-btn" title="FAHMI-Ai"></i>
-                <i class="header-icon fas fa-calculator" id="calculator-btn" title="آلة حاسبة"></i>
-                <i class="header-icon fas fa-sticky-note" id="sticky-notes-btn" title="الملاحظات"></i>
-                <i class="header-icon fas fa-chalkboard" id="whiteboard-btn" title="اللوحة البيضاء"></i>
-            </div>
-            <div class="logo">The Academy</div>
-            <div class="header-profile">
-                <i class="header-icon fas fa-paper-plane" id="messages-btn" title="الرسائل"></i>
-                <div class="header-profile-icon" id="user-profile-btn">
-                    <img src="https://i.pravatar.cc/35?img=5" alt="Profile" id="header-user-avatar">
+                <div class="icon-box" id="header-calc-btn">
+                    <img src="https://i.ibb.co/8gWRwLPx/The-Academy-Logo-Turquoise-and-Orange-20251118-033143-0000-removebg-preview.png" class="custom-icon">
                 </div>
+                <div class="icon-box" id="sticky-notes-btn">
+                    <img src="https://i.ibb.co/21ZjVJ4z/Logo-for-Educational-App-with-Inviting-Impact-20251118-031818-0000-removebg-preview.png" class="custom-icon">
+                </div>
+                <div class="icon-box" id="lang-btn-app">
+                    <i class="fas fa-globe" style="font-size: 24px; color: #ccc;"></i>
+                </div>
+            </div>
+            <div class="logo">Academy</div>
+            <div class="header-profile">
+                <div class="header-profile-icon" id="user-profile-btn"><img src="https://i.pravatar.cc/35?img=5" id="header-user-avatar"></div>
             </div>
         </div>
 
         <div id="home-page">
-            <div class="award-section">
-                </div>
             <div class="stories-container">
                 <div class="stories" id="stories-list">
                     <div class="story" id="add-story-btn">
-                        <div class="story-avatar-add">
-                            <i class="fas fa-plus"></i>
-                        </div>
+                        <div class="story-avatar-add"><i class="fas fa-plus"></i></div>
                         <div class="story-username">قصتك</div>
                     </div>
-                    </div>
-            </div>
-            <div class="feed-tabs">
-                <div class="feed-tab active">للجميع</div>
-                <div class="feed-tab">الأساتذة</div>
-                <div class="feed-tab">الطلاب</div>
-            </div>
-            <div class="feed" id="feed-container">
                 </div>
+            </div>
+            <div class="feed" id="feed-container"></div>
         </div>
 
         <div id="search-page" style="display: none;">
-            <div class="search-container">
-                <input type="text" class="search-bar" placeholder="ابحث عن أصدقاء، أساتذة..." id="search-input">
-                <div class="search-tabs">
-                    <div class="search-tab active" data-type="all">الجميع</div>
-                    <div class="search-tab" data-type="teachers">الأساتذة</div>
-                </div>
-                <div class="search-results" id="search-results"></div>
+            <div class="search-container" style="padding: 20px; margin-top: 70px;">
+                <input type="text" class="login-input" id="search-input" placeholder="ابحث...">
+                <div id="search-results"></div>
             </div>
         </div>
-
         <div id="chat-page" style="display: none;">
             <div class="chat-container">
-                <div class="chat-header">
-                    <div class="chat-header-info">
-                        <img src="https://i.pravatar.cc/40?img=7" alt="مجموعة" style="width:40px; height:40px; border-radius:50%;">
-                        <div>
-                            <div style="font-weight: 600;" id="chat-title">مجموعة الدراسة</div>
-                            <div style="font-size: 12px; color: var(--secondary-color);">أعضاء المجموعة: 12</div>
-                        </div>
-                    </div>
-                    <div class="chat-header-icons">
-                        <i class="fas fa-info-circle"></i>
-                    </div>
-                </div>
-                <div class="chat-messages" id="chat-messages">
-                    </div>
+                <div class="chat-header">مجموعة الدراسة</div>
+                <div class="chat-messages" id="chat-messages"></div>
                 <div class="chat-input-container">
-                    <input type="text" class="chat-input" placeholder="اكتب رسالة..." id="chat-message-input">
-                    <div id="recording-timer">00:00</div>
-                    <button class="send-btn" id="send-message-btn">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button class="send-btn record-btn" id="record-audio-btn">
-                        <i class="fas fa-microphone"></i>
-                    </button>
+                    <input type="text" class="chat-input" id="chat-message-input" placeholder="اكتب...">
+                    <button class="send-btn" id="send-message-btn"><i class="fas fa-paper-plane"></i></button>
+                    <button class="record-btn" id="record-audio-btn"><i class="fas fa-microphone"></i></button>
                 </div>
             </div>
         </div>
-
         <div id="leaderboard-page" style="display: none;">
-            <div class="leaderboard-container">
-                <h2 style="margin-bottom: 20px; text-align: center;">🏆 المتصدرين هذا الأسبوع (الأكثر تفاعلاً)</h2>
-                <div id="leaderboard-list">
-                    </div>
+            <div class="leaderboard-container" style="padding: 20px; margin-top: 70px;">
+                <h2>🏆 المتصدرين</h2><div id="leaderboard-list"></div>
             </div>
         </div>
 
         <div class="bottom-nav">
-            <a href="#" class="nav-item active" data-page="home-page"><i class="fas fa-home"></i></a>
-            <a href="#" class="nav-item" data-page="search-page"><i class="fas fa-search"></i></a>
-            <a href="#" class="nav-item" id="create-post-nav-btn"><i class="fas fa-plus-square"></i></a>
-            <a href="#" class="nav-item" data-page="chat-page"><i class="fas fa-comments"></i></a>
-            <a href="#" class="nav-item" data-page="leaderboard-page"><i class="fas fa-trophy"></i></a>
+            <div class="nav-item active" data-page="home-page"><img src="https://i.ibb.co/xSSPhYyX/Trendy-3-D-Share-Icon-Designs-for-The-Academy-20251118-043618-0000-removebg-preview.png" class="custom-icon"></div>
+            <div class="nav-item" data-page="search-page"><img src="https://i.ibb.co/GvtC4FHL/Dynamic-Logo-for-Educational-App-Featuring-Magnifying-Glass-20251118-033503-0000-removebg-preview.png" class="custom-icon"></div>
+            <div class="nav-item" id="create-post-nav-btn"><img src="https://i.ibb.co/DH91xKVL/3-D-Modern-Logout-Button-for-The-Academy-20251118-045251-0000-removebg-preview.png" class="custom-icon" style="width: 45px; height: 45px;"></div>
+            <div class="nav-item" data-page="chat-page"><img src="https://i.ibb.co/Ndrf6DVr/Comment-Button-Icon-for-The-Academy-20251118-052424-0000-removebg-preview.png" class="custom-icon"></div>
+            <div class="nav-item" data-page="leaderboard-page"><img src="https://i.ibb.co/RptcGjDd/Emblem-Logo-for-Educational-App-The-Academy-20251118-042052-0000-removebg-preview.png" class="custom-icon"></div>
         </div>
     </div>
 
-    <div class="modal" id="profile-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">ملفي الشخصي</div>
-                <div class="modal-close" data-modal="profile-modal">×</div>
-            </div>
-            <div class="modal-body" style="padding:0;">
-                <div class="profile-header">
-                    <div class="profile-info">
-                        <img src="https://i.pravatar.cc/80?img=5" alt="Profile" class="profile-avatar" id="modal-profile-avatar">
-                        <div style="flex:1;">
-                            <div style="font-weight:600; font-size:20px; margin-bottom:5px;" id="modal-profile-name">...</div>
-                            <div style="color:var(--secondary-color); font-size:14px;" id="modal-profile-role">...</div>
-                            <button class="upgrade-btn" id="upgrade-btn">
-                                <i class="fas fa-crown"></i> الترقية إلى PRO
-                            </button>
-                        </div>
-                    </div>
-                    <div class="profile-stats">
-                        <div class="profile-stat"><div class="stat-count" id="modal-posts-count">0</div><div class="stat-label">منشور</div></div>
-                        <div class="profile-stat"><div class="stat-count" id="modal-followers-count">0</div><div class="stat-label">متابع</div></div>
-                        <div class="profile-stat"><div class="stat-count" id="modal-following-count">0</div><div class="stat-label">متابَع</div></div>
-                    </div>
-                    <div class="profile-bio" id="modal-profile-bio">...</div>
-                </div>
-                <div class="profile-actions">
-                    <button class="form-submit" id="edit-profile-btn" style="background-color: var(--secondary-color);">
-                        <i class="fas fa-edit"></i> تعديل الملف الشخصي
-                    </button>
-                    <button class="form-submit" id="logout-btn" style="background: var(--danger-color);">
-                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                    </button>
-                </div>
-                <div class="profile-tabs">
-                    <div class="profile-tab active"><i class="fas fa-th"></i></div>
-                    <div class="profile-tab"><i class="fas fa-bookmark"></i></div>
-                </div>
-                <div class="profile-posts" id="modal-profile-posts"></div>
-            </div>
+    <div id="ai-floating-bubble">
+        <video autoplay loop muted playsinline>
+            <source src="https://res.cloudinary.com/dmhtx93nj/video/upload/v1/grok_video_2025-11-18-05-04-50_o8us8r.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div id="ai-book-chat">
+        <div class="modal-header" style="background:transparent; border-bottom:1px solid #aaa; color:#333;">
+            <span style="font-weight:bold;">FAHMI-Ai</span><i class="fas fa-times" id="close-ai-chat" style="cursor:pointer; color:#333;"></i>
+        </div>
+        <div id="ai-messages" style="flex:1; padding:15px; overflow-y:auto; color:#333;"></div>
+        <div style="padding:10px; display:flex; gap:5px;">
+            <input type="text" id="ai-input" placeholder="اسألني..." style="flex:1; border:1px solid #ccc; padding:8px;">
+            <button id="ai-send-btn" style="background:var(--primary); border:none; width:35px; color:white;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <div class="modal" id="create-post-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">إنشاء منشور جديد</div>
-                <div class="modal-close" data-modal="create-post-modal">×</div>
-            </div>
-            <div class="modal-body">
-                <div id="upload-speed-info" class="upload-speed-indicator">
-                    ⚡ سرعة التحميل: عادية
-                </div>
-                <div class="form-group">
-                    <label class="form-label">النص</label>
-                    <textarea class="form-textarea" placeholder="اكتب شرحاً..." id="post-content-input"></textarea>
-                    <div class="character-count" style="text-align:left; margin-top:5px;">
-                        <span id="post-char-count">0</span>/1000 حرف (للمستخدم العادي)
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">مشاركة فيديو (رابط Youtube)</label>
-                    <input type="text" class="form-input" placeholder="https://youtube.com/..." id="post-video-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">رفع ملف (صورة، فيديو، PDF)</label>
-                    <input type="file" class="form-input" id="post-file-input" accept="image/*,video/*,application/pdf">
-                    <div style="font-size:12px; color:var(--secondary-color); margin-top:5px;">
-                        الحد الأقصى للعادي: 100MB / 5 دقائق للفيديو
-                    </div>
-                </div>
-                <div id="post-upload-progress" style="display:none; margin-bottom: 10px;">
-                    جاري الرفع: <progress value="0" max="100"></progress> <span id="upload-percentage">0%</span>
-                </div>
-                <button class="form-submit" id="submit-post-btn">نشر</button>
-            </div>
-        </div>
-    </div>
-    
     <div class="modal" id="calculator-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">آلة حاسبة علمية</div>
-                <div class="modal-close" data-modal="calculator-modal">×</div>
-            </div>
+            <div class="modal-header"><div class="modal-title">Scientific Calc</div><div class="modal-close" data-modal="calculator-modal">×</div></div>
             <div class="modal-body">
+                <div class="calc-display" id="calc-display">0</div>
+                <div style="text-align:center; margin-bottom:10px;"><button id="toggle-sci-btn" style="background:none; border:none; color:var(--primary);">🔽 علمي</button></div>
+                <div id="calc-sci-panel" style="display:none; grid-template-columns:repeat(5,1fr); gap:5px; margin-bottom:10px;">
+                    <button class="calc-btn c-sci" data-op="sin">sin</button><button class="calc-btn c-sci" data-op="cos">cos</button><button class="calc-btn c-sci" data-op="tan">tan</button><button class="calc-btn c-sci" data-op="log">log</button><button class="calc-btn c-sci" data-op="sqrt">√</button>
+                </div>
                 <div class="calculator-body">
-                    <div class="calc-display" id="calc-display">0</div>
-                    
-                    <button class="calc-btn operator" data-type="op-sci" data-val="sin">sin</button>
-                    <button class="calc-btn operator" data-type="op-sci" data-val="cos">cos</button>
-                    <button class="calc-btn operator" data-type="op-sci" data-val="tan">tan</button>
-                    <button class="calc-btn operator" data-type="op" data-val="^">xʸ</button>
-                    <button class="calc-btn operator" data-type="op-sci" data-val="sqrt">√</button>
-                    
-                    <button class="calc-btn operator" data-type="op-sci" data-val="log">log</button>
-                    <button class="calc-btn operator" data-type="op-sci" data-val="ln">ln</button>
-                    <button class="calc-btn operator" data-type="op" data-val="(">(</button>
-                    <button class="calc-btn operator" data-type="op" data-val=")">)</button>
-                    <button class="calc-btn operator" data-type="op-sci" data-val="!">n!</button>
-                    
-                    <button class="calc-btn clear" data-type="clear" data-val="C">C</button>
-                    <button class="calc-btn operator" data-type="op" data-val="/">/</button>
-                    <button class="calc-btn operator" data-type="op" data-val="*">x</button>
-                    <button class="calc-btn operator" data-type="op" data-val="-">-</button>
-                    <button class="calc-btn operator equal" data-type="equal" data-val="=">=</button>
-                    
-                    <button class="calc-btn num" data-type="num" data-val="7">7</button>
-                    <button class="calc-btn num" data-type="num" data-val="8">8</button>
-                    <button class="calc-btn num" data-type="num" data-val="9">9</button>
-                    <button class="calc-btn operator" data-type="op" data-val="+">+</button>
-                    
-                    <button class="calc-btn num" data-type="num" data-val="4">4</button>
-                    <button class="calc-btn num" data-type="num" data-val="5">5</button>
-                    <button class="calc-btn num" data-type="num" data-val="6">6</button>
-                    
-                    <button class="calc-btn num" data-type="num" data-val="1">1</button>
-                    <button class="calc-btn num" data-type="num" data-val="2">2</button>
-                    <button class="calc-btn num" data-type="num" data-val="3">3</button>
-
-                    <button class="calc-btn num zero" data-type="num" data-val="0">0</button>
-                    <button class="calc-btn" data-type="decimal" data-val=".">.</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal" id="fahmi-ai-modal">
-        </div>
-
-    <div class="modal" id="sticky-notes-modal">
-        <div class="modal-content modal-content-full">
-            <div class="modal-header">
-                <div class="modal-title">ملاحظاتي اللاصقة</div>
-                <div class="modal-close" data-modal="sticky-notes-modal">×</div>
-            </div>
-            <div class="modal-body">
-                <button class="form-submit" id="add-sticky-note" style="margin-bottom: 15px;">
-                    <i class="fas fa-plus"></i> إضافة ملاحظة جديدة
-                </button>
-                <div class="sticky-notes-container" id="sticky-notes-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="whiteboard-modal">
-        <div class="modal-content modal-content-full">
-            <div class="modal-header">
-                <div class="modal-title">اللوحة البيضاء</div>
-                <div class="modal-close" data-modal="whiteboard-modal">×</div>
-            </div>
-            <div class="modal-body" style="padding:0; display:flex; flex-direction:column;">
-                <div class="whiteboard-tools">
-                    <button class="whiteboard-tool active" data-tool="pen">✏️ قلم</button>
-                    <button class="whiteboard-tool" data-tool="eraser">🧽 ممحاة</button>
-                    <input type="color" id="whiteboard-color" value="#000000" style="border:none; background:transparent; width: 40px; height: 40px; cursor:pointer;">
-                    <input type="range" id="whiteboard-width" min="1" max="20" value="3" style="margin: 0 10px; cursor:pointer;">
-                    <button class="whiteboard-tool" id="clear-whiteboard">🗑️ مسح الكل</button>
-                </div>
-                <div class="whiteboard-container">
-                    <canvas id="whiteboard-canvas"></canvas>
+                    <button class="calc-btn c-del" data-op="C">C</button><button class="calc-btn c-op" data-op="/">&divide;</button><button class="calc-btn c-op" data-op="*">&times;</button><button class="calc-btn c-op" data-op="-">-</button>
+                    <button class="calc-btn c-num" data-val="7">7</button><button class="calc-btn c-num" data-val="8">8</button><button class="calc-btn c-num" data-val="9">9</button><button class="calc-btn c-op" data-op="+">+</button>
+                    <button class="calc-btn c-num" data-val="4">4</button><button class="calc-btn c-num" data-val="5">5</button><button class="calc-btn c-num" data-val="6">6</button><button class="calc-btn c-eq" data-op="=">=</button>
+                    <button class="calc-btn c-num" data-val="1">1</button><button class="calc-btn c-num" data-val="2">2</button><button class="calc-btn c-num" data-val="3">3</button>
+                    <button class="calc-btn c-num" data-val="0" style="grid-column:span 2;">0</button><button class="calc-btn c-num" data-val=".">.</button>
                 </div>
             </div>
         </div>
@@ -619,108 +243,59 @@
 
     <div class="modal" id="phone-login-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">المتابعة برقم الهاتف</div>
-                <div class="modal-close" data-modal="phone-login-modal">×</div>
-            </div>
+            <div class="modal-header"><div class="modal-title">الهاتف</div><div class="modal-close" data-modal="phone-login-modal">×</div></div>
             <div class="modal-body">
                 <div id="phone-step-1">
-                    <p>سوف نرسل لك رسالة نصية (SMS) تحتوي على كود تحقق.</p>
-                    <div class="form-group">
-                        <label class="form-label">رقم الهاتف (بالصيغة الدولية)</label>
-                        <input type="tel" class="form-input" placeholder="+21612345678" id="phone-number-input">
-                    </div>
-                    <div id="recaptcha-container" style="margin-top: 15px;"></div>
-                    <button class="form-submit" id="send-otp-btn">إرسال الكود</button>
+                    <input type="tel" class="login-input" placeholder="+216..." id="phone-number-input">
+                    <div id="recaptcha-container"></div>
+                    <button class="form-submit" id="send-otp-btn">إرسال</button>
                 </div>
                 <div id="phone-step-2" style="display: none;">
-                    <p>أدخل الكود المكون من 6 أرقام الذي تم إرساله إلى <span id="phone-display"></span></p>
-                    <div class="form-group">
-                        <label class="form-label">كود التحقق (OTP)</label>
-                        <input type="text" class="form-input" placeholder="123456" id="otp-input" maxlength="6">
-                    </div>
-                    <button class="form-submit" id="confirm-otp-btn">تأكيد وتسجيل الدخول</button>
+                    <input type="text" class="login-input" placeholder="الكود" id="otp-input">
+                    <button class="form-submit" id="confirm-otp-btn">تأكيد</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="story-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">إضافة/تعديل قصتك</div>
-                <div class="modal-close" data-modal="story-modal">×</div>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">اكتب حالتك (25 حرفاً كحد أقصى)</label>
-                    <input type="text" class="form-input" placeholder="أدرس الآن..." id="story-text-input" maxlength="25">
-                </div>
-                <button class="form-submit" id="save-story-btn">نشر القصة</button>
-                <button class="form-submit" id="delete-story-btn" style="background:var(--danger-color); margin-top:10px; display:none;">حذف القصة</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="upgrade-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">الترقية إلى The Academy PRO</div>
-                <div class="modal-close" data-modal="upgrade-modal">×</div>
-            </div>
-            <div class="modal-body upgrade-modal-body">
-                <h2><i class="fas fa-crown"></i> احصل على PRO</h2>
-                <p>افتح ميزات حصرية لتسريع دراستك!</p>
-                <ul>
-                    <li><i class="fas fa-check"></i> <strong>قصص (ستوري) تبقى لمدة 7 أيام</strong> مع إطار ذهبي.</li>
-                    <li><i class="fas fa-check"></i> <strong>رفع ملفات ضخمة</strong> (فيديو وملفات أكبر من 100MB).</li>
-                    <li><i class="fas fa-check"></i> <strong>رفع فيديوهات تصل إلى 15 دقيقة</strong> (بدلاً من 5 دقائق).</li>
-                    <li><i class="fas fa-check"></i> <strong>رسائل صوتية تصل إلى 15 دقيقة</strong> (بدلاً من 5 دقائق).</li>
-                    <li><i class="fas fa-check"></i> <strong>محاكاة تحميل صاروخية</strong> 🚀.</li>
-                    <li><i class="fas fa-check"></i> دعم فني أسرع.</li>
-                </ul>
-                <button class="form-submit" id="confirm-upgrade-btn">الترقية الآن (قريباً)</button>
             </div>
         </div>
     </div>
     
-    <div class="modal" id="edit-profile-modal">
+    <div class="modal" id="create-post-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">تعديل الملف الشخصي</div>
-                <div class="modal-close" data-modal="edit-profile-modal">×</div>
-            </div>
+            <div class="modal-header"><div class="modal-title">نشر</div><div class="modal-close" data-modal="create-post-modal">×</div></div>
             <div class="modal-body">
-                <div class="form-group" style="text-align: center;">
-                    <img src="https://i.pravatar.cc/80" id="edit-avatar-preview" class="profile-avatar" style="margin-bottom: 10px; cursor: pointer;">
-                    <input type="file" id="edit-avatar-input" accept="image/*" style="display: none;">
-                    <button class="form-submit" style="width: auto; padding: 5px 10px; background: var(--secondary-color);" id="change-avatar-btn">تغيير الصورة</button>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">الاسم الكامل</label>
-                    <input type="text" class="form-input" id="edit-name-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">اسم المستخدم</label>
-                    <input type="text" class="form-input" id="edit-username-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">النبذة الشخصية (Bio)</label>
-                    <textarea class="form-textarea" id="edit-bio-input"></textarea>
-                </div>
-                <button class="form-submit" id="save-profile-btn">حفظ التغييرات</button>
+                <textarea class="login-input" id="post-content-input" placeholder="اكتب..."></textarea>
+                <input type="file" id="post-file-input" class="login-input">
+                <div id="post-upload-progress" style="display:none;">جاري الرفع...</div>
+                <button class="form-submit" id="submit-post-btn">نشر</button>
             </div>
         </div>
     </div>
-    ```
 
----
+    <div class="modal" id="profile-modal">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title">ملفي</div><div class="modal-close" data-modal="profile-modal">×</div></div>
+            <div class="modal-body">
+                <div class="profile-header">
+                    <img src="" class="profile-avatar" id="modal-profile-avatar">
+                    <h3 id="modal-profile-name">...</h3>
+                    <button class="upgrade-btn" id="upgrade-btn">PRO 👑</button>
+                </div>
+                <div class="profile-actions">
+                    <button class="form-submit" id="logout-btn" style="background:var(--danger);">خروج</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-#### ⬇️ الجزء الثاني: JavaScript (انسخ هذا ثانياً)
-
-```javascript
+    <div class="modal" id="sticky-notes-modal">
+        <div class="modal-content"><div class="modal-header">ملاحظات</div><div class="modal-body"><div id="note-list-container"></div><button id="add-new-note-btn" class="form-submit">+ جديد</button></div></div>
+    </div>
+    <div class="modal" id="note-editor-modal"> <div class="modal-content"><div class="modal-header">تعديل</div><div class="modal-body"><input id="note-title-input" class="login-input"><textarea id="note-content-input" class="login-input" style="height:200px;"></textarea></div></div> </div>
+    <div class="modal" id="whiteboard-modal"> <div class="modal-content"><div class="modal-header">سبورة</div><div class="modal-body"><canvas id="whiteboard-canvas"></canvas></div></div> </div>
+    <div class="modal" id="lang-modal"> <div class="modal-content"><div class="modal-header">اللغة</div><div class="modal-body"><button onclick="setLang('ar')">العربية</button></div></div> </div>
+    <div class="modal" id="reset-password-modal"> <div class="modal-content"><div class="modal-header">استعادة</div><div class="modal-body"><input type="email" id="reset-email-input" class="login-input"><button id="send-reset-btn" class="form-submit">إرسال</button></div></div> </div>
+    <div class="modal" id="story-modal"> <div class="modal-content"><div class="modal-header">قصة</div><div class="modal-body"><input id="story-text-input" class="login-input"><button id="save-story-btn" class="form-submit">نشر</button><button id="delete-story-btn" class="form-submit" style="background:red;">حذف</button></div></div> </div>
     <script>
-        // === تهيئة Firebase ===
+        // 1. الإعدادات
         const firebaseConfig = {
             apiKey: "AIzaSyB-fNvLU-1CdlgwjG4Nst3FGTAezEmlGdA",
             authDomain: "the-academy-b3316.firebaseapp.com",
@@ -731,1184 +306,178 @@
             appId: "1:780594810246:web:4af762ceb98120752db007",
             measurementId: "G-QPET9CS9ES"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        const storage = firebase.storage();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // === متغيرات حالة التطبيق ===
-        let currentUser = null;
-        let userData = null;
-        let activeChat = 'general';
-        let isPremiumUser = false;
-        
-        // متغيرات الرسائل الصوتية
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let recordingTimerInterval;
-        let recordingStartTime;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // === تعريف عناصر DOM ===
-            const loginScreen = document.getElementById('login-screen');
-            const signupScreen = document.getElementById('signup-screen');
-            const appContent = document.getElementById('app-content');
-            const loginBtn = document.getElementById('login-btn');
-            const signupBtn = document.getElementById('signup-btn');
-            const googleLoginBtn = document.getElementById('google-login');
-            const phoneLoginBtn = document.getElementById('phone-login-btn');
-            const googleSignupBtn = document.getElementById('google-signup-btn');
-            const phoneSignupBtn = document.getElementById('phone-signup-btn');
-            const showSignup = document.getElementById('show-signup');
-            const showLogin = document.getElementById('show-login');
-            const navItems = document.querySelectorAll('.nav-item');
-            const pages = document.querySelectorAll('[id$="-page"]');
-            
-            // النوافذ
-            const profileModal = document.getElementById('profile-modal');
-            const createPostModal = document.getElementById('create-post-modal');
-            const calculatorModal = document.getElementById('calculator-modal');
-            const fahmiAiModal = document.getElementById('fahmi-ai-modal');
-            const stickyNotesModal = document.getElementById('sticky-notes-modal');
-            const whiteboardModal = document.getElementById('whiteboard-modal');
-            const phoneLoginModal = document.getElementById('phone-login-modal');
-            const storyModal = document.getElementById('story-modal');
-            const upgradeModal = document.getElementById('upgrade-modal');
-            const editProfileModal = document.getElementById('edit-profile-modal');
-            
-            // الأزرار
-            const userProfileBtn = document.getElementById('user-profile-btn');
-            const calculatorBtn = document.getElementById('calculator-btn');
-            const fahmiAiBtn = document.getElementById('fahmi-ai-btn');
-            const messagesBtn = document.getElementById('messages-btn');
-            const stickyNotesBtn = document.getElementById('sticky-notes-btn');
-            const whiteboardBtn = document.getElementById('whiteboard-btn');
-            const createPostNavBtn = document.getElementById('create-post-nav-btn');
-            const upgradeBtn = document.getElementById('upgrade-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const editProfileBtn = document.getElementById('edit-profile-btn');
-            
-            // عناصر الستوري
-            const addStoryBtn = document.getElementById('add-story-btn');
-            const saveStoryBtn = document.getElementById('save-story-btn');
-            const deleteStoryBtn = document.getElementById('delete-story-btn');
-            const storyTextInput = document.getElementById('story-text-input');
-            
-            // عناصر الدردشة (للرسائل الصوتية)
-            const chatMessageInput = document.getElementById('chat-message-input');
-            const sendMessageBtn = document.getElementById('send-message-btn');
-            const recordAudioBtn = document.getElementById('record-audio-btn');
-            const recordingTimerDisplay = document.getElementById('recording-timer');
+        const CLOUD_NAME = "dmhtx93rq"; 
+        const UPLOAD_PRESET = "the_academy_upload"; 
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+        const GEMINI_API_KEY = "AIzaSy..."; // ضع مفتاحك
 
-            // === 1. نظام المصادقة الأساسي ===
-            
-            auth.onAuthStateChanged((user) => {
+        let currentUser = null, userData = null, isPremiumUser = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // المصادقة
+            auth.onAuthStateChanged(user => {
                 if (user) {
                     if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
-                        showNotification('يرجى تأكيد بريدك الإلكتروني لتسجيل الدخول. تم إرسال رابط جديد.', 'warning');
-                        user.sendEmailVerification();
-                        auth.signOut();
-                        return;
+                        alert('يرجى تفعيل الإيميل'); user.sendEmailVerification(); auth.signOut(); return;
                     }
                     currentUser = user;
                     loadUserData(user.uid);
-                    loginScreen.style.display = 'none';
-                    signupScreen.style.display = 'none';
-                    appContent.style.display = 'block';
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-content').style.display = 'block';
                 } else {
-                    currentUser = null;
-                    userData = null;
-                    isPremiumUser = false;
-                    loginScreen.style.display = 'flex';
-                    appContent.style.display = 'none';
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('app-content').style.display = 'none';
                 }
             });
 
             function loadUserData(uid) {
-                db.ref('users/' + uid).on('value', (snapshot) => {
-                    userData = snapshot.val();
-                    if (userData) {
+                db.ref('users/' + uid).on('value', snap => {
+                    userData = snap.val();
+                    if(userData) {
                         isPremiumUser = userData.isPremium || false;
-                        updateUIWithUserData();
+                        document.getElementById('header-user-avatar').src = userData.avatar || 'https://i.pravatar.cc/80';
+                        document.getElementById('modal-profile-name').textContent = userData.name;
                         loadPosts();
-                        loadStories();
-                        loadLeaderboard();
-                        updateUploadSpeedIndicator();
-                        
-                        if (isPremiumUser) {
-                            upgradeBtn.textContent = 'أنت عضو PRO بالفعل 👑';
-                            upgradeBtn.disabled = true;
-                        } else {
-                            upgradeBtn.textContent = 'الترقية إلى PRO 🚀';
-                            upgradeBtn.disabled = false;
-                        }
                     }
                 });
             }
 
-            function updateUIWithUserData() {
-                const avatar = userData.avatar || 'https://i.pravatar.cc/80';
-                document.getElementById('header-user-avatar').src = avatar;
-                document.getElementById('modal-profile-name').textContent = userData.name;
-                document.getElementById('modal-profile-role').textContent = (userData.role === 'teacher' ? 'أستاذ' : 'طالب');
-                document.getElementById('modal-profile-avatar').src = avatar;
-                document.getElementById('modal-profile-bio').textContent = userData.bio || 'لا توجد نبذة شخصية...';
-                document.getElementById('modal-followers-count').textContent = (userData.followers ? Object.keys(userData.followers).length : 0);
-                document.getElementById('modal-following-count').textContent = (userData.following ? Object.keys(userData.following).length : 0);
-            }
+            // أزرار الدخول
+            document.getElementById('do-login-btn').onclick = () => {
+                const e = document.getElementById('login-email').value;
+                const p = document.getElementById('login-password').value;
+                auth.signInWithEmailAndPassword(e, p).catch(err => alert(err.message));
+            };
+            document.getElementById('google-login-btn').onclick = () => auth.signInWithPopup(googleProvider);
+            document.getElementById('phone-login-btn').onclick = () => document.getElementById('phone-login-modal').classList.add('active');
             
-            function updateUploadSpeedIndicator() {
-                const speedIndicator = document.getElementById('upload-speed-info');
-                if (isPremiumUser) {
-                    speedIndicator.textContent = '🚀 سرعة التحميل: صاروخية (محاكاة)';
-                    speedIndicator.className = 'upload-speed-indicator upload-speed-rocket';
-                } else {
-                    speedIndicator.textContent = '⚡ سرعة التحميل: عادية';
-                    speedIndicator.className = 'upload-speed-indicator';
-                }
-            }
-            
-            showSignup.addEventListener('click', (e) => { e.preventDefault(); loginScreen.style.display = 'none'; signupScreen.style.display = 'flex'; });
-            showLogin.addEventListener('click', (e) => { e.preventDefault(); signupScreen.style.display = 'none'; loginScreen.style.display = 'flex'; });
-
-            // === 2. تحسين التسجيل بالإيميل (مع التحقق) ===
-            
-            loginBtn.addEventListener('click', function() {
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                if (!email || !password) return showNotification('يرجى ملء جميع الحقول', 'warning');
-
-                auth.signInWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        if (!userCredential.user.emailVerified) {
-                            showNotification('يرجى تأكيد بريدك الإلكتروني. تم إرسال رابط تحقق جديد.', 'warning');
-                            userCredential.user.sendEmailVerification();
-                            auth.signOut();
-                        } else {
-                            showNotification('مرحباً بعودتك!', 'success');
-                        }
-                    })
-                    .catch((error) => showNotification('خطأ: ' + error.message, 'error'));
-            });
-            
-            signupBtn.addEventListener('click', function() {
+            document.getElementById('do-signup-btn').onclick = () => {
                 const name = document.getElementById('signup-name').value;
-                const username = document.getElementById('signup-username').value;
                 const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
+                const pass = document.getElementById('signup-password').value;
                 const role = document.getElementById('signup-role').value;
                 
-                if (!name || !username || !email || !password || !role) {
-                    return showNotification('يرجى ملء جميع الحقول', 'warning');
-                }
+                // الصورة الافتراضية حسب الدور
+                const avatar = role === 'teacher' ? 
+                    'https://i.ibb.co/kVbWH6fk/Flat-Vector-Logo-for-the-Academy-20251118-041222-0000-removebg-preview.png' : 
+                    'https://i.ibb.co/YBBp722K/Minimalist-Student-Icon-with-Graduation-Cap-20251118-040248-0000-removebg-preview.png';
 
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        const user = userCredential.user;
-                        user.sendEmailVerification().then(() => {
-                            showNotification('تم إنشاء حسابك! يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.', 'success');
-                        });
-
-                        return db.ref('users/' + user.uid).set({
-                            name: name,
-                            username: username,
-                            email: email,
-                            role: role,
-                            createdAt: firebase.database.ServerValue.TIMESTAMP,
-                            profileComplete: false,
-                            engagementPoints: 0,
-                            isPremium: false,
-                            avatar: 'https://i.pravatar.cc/80'
-                        });
-                    })
-                    .then(() => auth.signOut())
-                    .catch((error) => showNotification('خطأ: ' + error.message, 'error'));
-            });
-
-            // === 3. التسجيل بجوجل والهاتف ===
-            
-            function handleGoogleSignIn() {
-                auth.signInWithPopup(googleProvider)
-                    .then((result) => {
-                        showNotification('تم تسجيل الدخول بنجاح!', 'success');
-                        if (result.additionalUserInfo.isNewUser) {
-                            const user = result.user;
-                            return db.ref('users/' + user.uid).set({
-                                name: user.displayName,
-                                username: user.email.split('@')[0],
-                                email: user.email,
-                                role: 'student',
-                                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                                profileComplete: false,
-                                engagementPoints: 0,
-                                isPremium: false,
-                                avatar: user.photoURL || 'https://i.pravatar.cc/80'
-                            });
-                        }
-                    }).catch((error) => showNotification('خطأ: ' + error.message, 'error'));
-            }
-            googleLoginBtn.addEventListener('click', handleGoogleSignIn);
-            googleSignupBtn.addEventListener('click', handleGoogleSignIn);
-
-            const phoneStep1 = document.getElementById('phone-step-1');
-            const phoneStep2 = document.getElementById('phone-step-2');
-            let confirmationResult = null;
-            
-            function handlePhoneSignIn(e) {
-                e.preventDefault();
-                phoneLoginModal.classList.add('active');
-                phoneStep1.style.display = 'block';
-                phoneStep2.style.display = 'none';
-                
-                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                  'size': 'invisible',
-                  'callback': () => {}
-                });
-                window.recaptchaVerifier.render().catch(err => {
-                    showNotification('خطأ ReCaptcha. تأكد من أنك على دومين مصرح به.', 'error');
-                });
-            }
-            phoneLoginBtn.addEventListener('click', handlePhoneSignIn);
-            phoneSignupBtn.addEventListener('click', handlePhoneSignIn);
-
-            document.getElementById('send-otp-btn').addEventListener('click', () => {
-                const phoneNumber = document.getElementById('phone-number-input').value;
-                const appVerifier = window.recaptchaVerifier;
-                if (!phoneNumber.startsWith('+')) return showNotification('الرقم يجب أن يبدأ بـ + (الصيغة الدولية)', 'warning');
-                
-                auth.signInWithPhoneNumber(phoneNumber, appVerifier)
-                    .then((result) => {
-                        confirmationResult = result;
-                        showNotification('تم إرسال الكود!', 'success');
-                        phoneStep1.style.display = 'none';
-                        phoneStep2.style.display = 'block';
-                        document.getElementById('phone-display').textContent = phoneNumber;
-                    }).catch((error) => showNotification('خطأ: ' + error.message, 'error'));
-            });
-
-            document.getElementById('confirm-otp-btn').addEventListener('click', () => {
-                const code = document.getElementById('otp-input').value;
-                if (!code || code.length !== 6) return showNotification('كود خاطئ', 'warning');
-
-                confirmationResult.confirm(code)
-                    .then((result) => {
-                        const user = result.user;
-                        db.ref('users/' + user.uid).once('value', (snapshot) => {
-                            if (!snapshot.exists()) {
-                                return db.ref('users/' + user.uid).set({
-                                    name: 'مستخدم ' + user.uid.substring(0, 5),
-                                    username: user.phoneNumber,
-                                    phone: user.phoneNumber,
-                                    role: 'student',
-                                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                                    profileComplete: false,
-                                    engagementPoints: 0,
-                                    isPremium: false,
-                                    avatar: 'https://i.pravatar.cc/80'
-                                });
-                            }
-                        });
-                        phoneLoginModal.classList.remove('active');
-                    }).catch((error) => showNotification('الكود غير صحيح.', 'error'));
-            });
-
-            // === 4. نظام الستوري (الحالة) ===
-            addStoryBtn.addEventListener('click', () => {
-                if (!userData) return;
-                db.ref('stories/' + currentUser.uid).once('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        storyTextInput.value = snapshot.val().text;
-                        deleteStoryBtn.style.display = 'block';
-                    } else {
-                        storyTextInput.value = '';
-                        deleteStoryBtn.style.display = 'none';
-                    }
-                });
-                storyModal.classList.add('active');
-            });
-
-            saveStoryBtn.addEventListener('click', () => {
-                const text = storyTextInput.value.trim();
-                if (!text) return showNotification('الرجاء كتابة حالة', 'warning');
-                
-                const now = firebase.database.ServerValue.TIMESTAMP;
-                const duration = isPremiumUser ? (1000*60*60*24*7) : (1000*60*60*24);
-                
-                db.ref('stories/' + currentUser.uid).set({
-                    text: text,
-                    userId: currentUser.uid,
-                    createdAt: now,
-                    duration: duration, 
-                    isPremiumStory: isPremiumUser
-                }).then(() => {
-                    showNotification('تم نشر قصتك!', 'success');
-                    addEngagementPoints(3);
-                    storyModal.classList.remove('active');
-                });
-            });
-            
-            deleteStoryBtn.addEventListener('click', () => {
-                db.ref('stories/' + currentUser.uid).remove().then(() => {
-                    showNotification('تم حذف قصتك', 'success');
-                    storyModal.classList.remove('active');
-                });
-            });
-
-            function loadStories() {
-                const container = document.getElementById('stories-list');
-                db.ref('stories').on('value', (snapshot) => {
-                    container.querySelectorAll('.story:not(#add-story-btn)').forEach(el => el.remove());
-                    const stories = snapshot.val();
-                    if (!stories) return;
-                    const now = Date.now();
-                    
-                    Object.keys(stories).forEach(storyId => {
-                        const story = stories[storyId];
-                        const expiresAt = story.createdAt + story.duration;
-                        
-                        if (now > expiresAt) {
-                            if(story.userId === currentUser?.uid) db.ref('stories/' + story.userId).remove();
-                            return;
-                        }
-                        
-                        db.ref('users/' + story.userId).once('value', (userSnap) => {
-                            const user = userSnap.val();
-                            if (!user) return;
-                            
-                            const storyElement = document.createElement('div');
-                            storyElement.className = 'story';
-                            storyElement.innerHTML = `
-                                <div class="story-avatar ${story.isPremiumStory ? 'premium-story' : ''}">
-                                    <img src="${user.avatar || 'https://i.pravatar.cc/56'}" alt="${user.name}">
-                                </div>
-                                <div class="story-text">${story.text}</div>
-                            `;
-                            container.appendChild(storyElement);
-                        });
+                auth.createUserWithEmailAndPassword(email, pass).then(cred => {
+                    cred.user.sendEmailVerification();
+                    db.ref('users/' + cred.user.uid).set({
+                        name, email, role, avatar,
+                        createdAt: Date.now(), engagementPoints: 0, isPremium: false
                     });
+                    alert('تم الإنشاء! راجع بريدك.');
+                }).catch(e => alert(e.message));
+            };
+
+            // نسيت كلمة المرور
+            document.getElementById('forgot-pass-btn').onclick = () => document.getElementById('reset-password-modal').classList.add('active');
+            document.getElementById('send-reset-btn').onclick = () => {
+                const email = document.getElementById('reset-email-input').value;
+                if(email) auth.sendPasswordResetEmail(email).then(() => alert('تم الإرسال'));
+            };
+
+            // التنقل
+            document.getElementById('go-to-signup').onclick = () => { document.getElementById('login-screen').style.display='none'; document.getElementById('signup-screen').style.display='flex'; };
+            document.getElementById('go-to-login').onclick = () => { document.getElementById('signup-screen').style.display='none'; document.getElementById('login-screen').style.display='flex'; };
+
+            // الآلة الحاسبة
+            document.getElementById('header-calc-btn').onclick = () => document.getElementById('calculator-modal').classList.add('active');
+            let calcExpr = "";
+            document.querySelectorAll('.calc-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const val = btn.dataset.val; const op = btn.dataset.op;
+                    if (val) calcExpr += val;
+                    else if (op === 'C') calcExpr = "";
+                    else if (op === 'back') calcExpr = calcExpr.slice(0,-1);
+                    else if (op === '=') {
+                        try { document.getElementById('calc-display').innerText = eval(calcExpr); calcExpr = document.getElementById('calc-display').innerText; }
+                        catch { document.getElementById('calc-display').innerText = "Error"; }
+                    } else calcExpr += op;
+                    document.getElementById('calc-display').innerText = calcExpr || "0";
                 });
-            }
-
-            // === 5. نظام المنشورات (مع فحص الترقية) ===
-            
-            function checkVideoDuration(file) {
-                return new Promise((resolve, reject) => {
-                    const videoElement = document.createElement('video');
-                    videoElement.preload = 'metadata';
-                    videoElement.onloadedmetadata = function() {
-                        URL.revokeObjectURL(videoElement.src);
-                        const duration = videoElement.duration;
-                        const maxDurationNormal = 5 * 60;
-                        const maxDurationPremium = 15 * 60;
-
-                        if (isPremiumUser && duration > maxDurationPremium) {
-                            reject(new Error(`الفيديو طويل جداً للمستخدم المميز (الحد 15 دقيقة).`));
-                        } else if (!isPremiumUser && duration > maxDurationNormal) {
-                            reject(new Error(`الحد الأقصى 5 دقائق. قم بالترقية لرفع 15 دقيقة.`));
-                        } else {
-                            resolve();
-                        }
-                    };
-                    videoElement.onerror = () => reject(new Error("لا يمكن قراءة ملف الفيديو."));
-                    videoElement.src = URL.createObjectURL(file);
-                });
-            }
-            
-            document.getElementById('submit-post-btn').addEventListener('click', async function() {
-                const content = document.getElementById('post-content-input').value;
-                const videoUrl = document.getElementById('post-video-input').value;
-                const file = document.getElementById('post-file-input').files[0];
-                
-                if (!content && !file && !videoUrl) return showNotification('يجب أن يحتوي المنشور على محتوى', 'warning');
-                if (!isContentSafe(content)) return showNotification('يحتوي المنشور على كلمات ممنوعة.', 'error');
-                if (!isPremiumUser && content.length > 1000) return showNotification('النص يتجاوز 1000 حرف (للعاديين)', 'warning');
-
-                this.disabled = true;
-                
-                if (file) {
-                    if (!isPremiumUser && file.type.startsWith('video/') && file.size > 100 * 1024 * 1024) {
-                        showNotification('حجم الفيديو يتجاوز 100MB (للعاديين). قم بالترقية!', 'warning');
-                        this.disabled = false;
-                        return;
-                    }
-                    if (file.type.startsWith('video/')) {
-                        try {
-                            await checkVideoDuration(file);
-                        } catch (error) {
-                            showNotification(error.message, 'warning');
-                            this.disabled = false;
-                            return;
-                        }
-                    }
-                    uploadFile(file, content, videoUrl);
-                } else {
-                    savePost(content, videoUrl, null, null, null, null);
-                }
             });
 
-            function uploadFile(file, content, videoUrl) {
-                const fileRef = storage.ref(`posts/${currentUser.uid}/${Date.now()}_${file.name}`);
-                const uploadTask = fileRef.put(file);
-                const progressDiv = document.getElementById('post-upload-progress');
-                progressDiv.style.display = 'block';
-                const progressBar = progressDiv.querySelector('progress');
-                const progressSpan = document.getElementById('upload-percentage');
-
-                uploadTask.on('state_changed', (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    let speedMultiplier = isPremiumUser ? 3 : 1;
-                    const simulatedProgress = Math.min(progress * speedMultiplier, 100);
-                    progressBar.value = simulatedProgress;
-                    progressSpan.textContent = Math.round(simulatedProgress) + '%';
-                }, (error) => {
-                    showNotification('خطأ في الرفع: ' + error.message, 'error');
-                }, () => {
-                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                        savePost(content, videoUrl, downloadURL, file.type, file.name, file.size);
-                    });
-                });
-            }
-
-            function savePost(content, videoUrl, fileUrl, fileType, fileName, fileSize) {
-                const postData = {
-                    content: content,
-                    videoUrl: videoUrl,
-                    fileUrl: fileUrl,
-                    fileType: fileType,
-                    fileName: fileName,
-                    fileSize: fileSize,
-                    userId: currentUser.uid,
-                    userName: userData.name,
-                    userRole: userData.role,
-                    userAvatar: userData.avatar,
-                    isPremium: isPremiumUser,
-                    likes: {},
-                    comments: {},
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
+            // FAHMI-Ai
+            const aiBubble = document.getElementById('ai-floating-bubble');
+            const aiChat = document.getElementById('ai-book-chat');
+            aiBubble.onclick = () => aiChat.classList.toggle('active');
+            document.getElementById('close-ai-chat').onclick = () => aiChat.classList.remove('active');
+            
+            // الرفع
+            window.uploadFile = function(file, content, videoUrl) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', UPLOAD_PRESET);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', CLOUDINARY_URL, true);
+                xhr.onload = () => {
+                    if(xhr.status === 200) {
+                        const res = JSON.parse(xhr.responseText);
+                        savePost(content, videoUrl, res.secure_url, file.type, res.original_filename, res.bytes);
+                    }
                 };
-                
-                db.ref('posts').push().set(postData)
-                    .then(() => {
-                        showNotification('تم النشر بنجاح!', 'success');
-                        addEngagementPoints(5);
-                        createPostModal.classList.remove('active');
-                        document.getElementById('post-content-input').value = '';
-                        document.getElementById('post-video-input').value = '';
-                        document.getElementById('post-file-input').value = null;
-                        document.getElementById('post-char-count').textContent = '0';
-                        document.getElementById('post-upload-progress').style.display = 'none';
-                        document.getElementById('submit-post-btn').disabled = false;
-                    })
-                    .catch((error) => {
-                        showNotification('خطأ: ' + error.message, 'error');
-                        document.getElementById('submit-post-btn').disabled = false;
-                    });
-            }
+                xhr.send(fd);
+            };
 
-            document.getElementById('post-content-input').addEventListener('input', function() {
-                const count = this.value.length;
-                const counter = document.getElementById('post-char-count');
-                counter.textContent = count;
-                if (!isPremiumUser && count > 1000) counter.style.color = 'red';
-                else counter.style.color = 'inherit';
-            });
+            function savePost(content, videoUrl, fileUrl, type, name, size) {
+                db.ref('posts').push().set({
+                    content, videoUrl, fileUrl, fileType: type, fileName: name, fileSize: size,
+                    userId: currentUser.uid, userName: userData.name, userAvatar: userData.avatar,
+                    isPremium: isPremiumUser, timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    alert('تم النشر!'); document.getElementById('create-post-modal').classList.remove('active');
+                });
+            }
+            document.getElementById('submit-post-btn').onclick = () => {
+                const content = document.getElementById('post-content-input').value;
+                const file = document.getElementById('post-file-input').files[0];
+                if(file) uploadFile(file, content, '');
+                else savePost(content, '', null, null, null, null);
+            };
 
             function loadPosts() {
                 const feed = document.getElementById('feed-container');
-                db.ref('posts').orderByChild('timestamp').limitToLast(20).on('value', (snapshot) => {
+                db.ref('posts').limitToLast(20).on('value', snap => {
                     feed.innerHTML = '';
-                    const posts = snapshot.val();
-                    if (!posts) return;
-                    Object.keys(posts).reverse().forEach(postId => {
-                        addPostToFeed(posts[postId], postId);
+                    const posts = snap.val();
+                    if(posts) Object.keys(posts).reverse().forEach(id => {
+                        const p = posts[id];
+                        feed.innerHTML += `<div class="post"><div class="post-header"><b>${p.userName}</b></div><div class="post-caption">${p.content}</div></div>`;
                     });
                 });
             }
 
-            function addPostToFeed(post, postId) {
-                const feed = document.getElementById('feed-container');
-                const postElement = document.createElement('div');
-                postElement.className = 'post';
-                
-                let mediaHTML = '';
-                if (post.fileUrl && post.fileType?.startsWith('image/')) {
-                    mediaHTML = `<div class="post-media"><img src="${post.fileUrl}" alt="صورة المنشور"></div>`;
-                } else if (post.fileUrl && post.fileType?.startsWith('video/')) {
-                    mediaHTML = `<div class="post-media"><video controls src="${post.fileUrl}"></video></div>`;
-                } else if (post.videoUrl && post.videoUrl.includes('youtube.com/watch?v=')) {
-                    const videoId = post.videoUrl.split('v=')[1].split('&')[0];
-                    mediaHTML = `<div class="post-media"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
-                } else if (post.fileUrl && post.fileType === 'application/pdf') {
-                     mediaHTML = `<div class="post-image"><i class="fas fa-file-pdf" style="font-size:48px; color:#db4437;"></i></div>`;
-                }
-                
-                let fileAttachmentHTML = '';
-                 if (post.fileUrl && !post.fileType?.startsWith('image/') && !post.fileType?.startsWith('video/')) {
-                    fileAttachmentHTML = `
-                    <div class="file-attachment">
-                        <i class="file-icon fas fa-file-pdf"></i>
-                        <div class="file-info">
-                            <div class="file-name">${post.fileName || 'ملف'}</div>
-                            <div class="file-size">${post.fileSize ? (post.fileSize / 1024 / 1024).toFixed(2) + ' MB' : ''}</div>
-                        </div>
-                        <button class="download-btn" data-url="${post.fileUrl}" data-premium="${post.userRole === 'teacher'}">
-                            تحميل ${post.userRole === 'teacher' ? '<i class="premium-lock fas fa-crown"></i>' : ''}
-                        </button>
-                    </div>`;
-                }
-                
-                const likesCount = post.likes ? Object.keys(post.likes).length : 0;
-                const isLiked = currentUser && post.likes && post.likes[currentUser.uid];
-
-                postElement.innerHTML = `
-                    <div class="post-header">
-                        <div class="post-user">
-                            <img src="${post.userAvatar || 'https.i.pravatar.cc/35'}" alt="مستخدم" class="post-avatar">
-                            <div class="post-user-info">
-                                <div class="post-username">
-                                    ${(post.userRole === 'teacher' || post.isPremium) ? '<span class="premium-badge">PRO</span>' : ''}
-                                    ${post.userName}
-                                </div>
-                                <div class="post-user-type">${post.userRole === 'teacher' ? 'أستاذ' : 'طالب'}</div>
-                            </div>
-                        </div>
-                        <div class="post-more"><i class="fas fa-ellipsis-h"></i></div>
-                    </div>
-                    ${mediaHTML}
-                    <div class="post-actions">
-                        <div class="post-actions-left">
-                            <i class="post-action fas fa-heart ${isLiked ? 'liked' : ''}" data-post="${postId}"></i>
-                            <i class="post-action fas fa-comment"></i>
-                            <i class="post-action fas fa-paper-plane"></i>
-                        </div>
-                        <div><i class="post-action fas fa-bookmark"></i></div>
-                    </div>
-                    <div class="post-likes">${likesCount} إعجاب</div>
-                    <div class="post-caption"><span class="username">${post.userName}</span> ${post.content || ''}</div>
-                    ${fileAttachmentHTML}
-                    <div class="content-warning">
-                        <i class="fas fa-shield-alt"></i> محتوى آمن.
-                        <div class="report-btn" data-post="${postId}">إبلاغ</div>
-                    </div>
-                    <div class="post-time">${formatTime(post.timestamp)}</div>
-                `;
-                feed.appendChild(postElement);
-                
-                const downloadBtn = postElement.querySelector('.download-btn');
-                if (downloadBtn) {
-                    downloadBtn.addEventListener('click', function() {
-                        const fileUrl = this.dataset.url;
-                        const isPremium = this.dataset.premium === 'true';
-                        if (isPremium && !isPremiumUser) {
-                            showNotification('هذا الملف مخصص للأعضاء المميزين فقط. قم بالترقية!', 'warning');
-                            return;
-                        }
-                        window.open(fileUrl, '_blank');
-                    });
-                }
-            }
-
-            // === 6. نظام نقاط التفاعل (الآمن) ===
-            function addEngagementPoints(points) {
-                if (!currentUser || !userData) return;
-                const userRef = db.ref('users/' + currentUser.uid);
-                userRef.child('engagementPoints').transaction((currentPoints) => {
-                    return (currentPoints || 0) + points;
-                });
-            }
-
-            function loadLeaderboard() {
-                const leaderboardList = document.getElementById('leaderboard-list');
-                db.ref('users').orderByChild('engagementPoints').limitToLast(10).on('value', (snapshot) => {
-                    const users = snapshot.val();
-                    if (!users) return;
-                    const sortedUsers = Object.keys(users).map(uid => ({ uid, ...users[uid] }))
-                        .sort((a, b) => (b.engagementPoints || 0) - (a.engagementPoints || 0));
-                    
-                    leaderboardList.innerHTML = '';
-                    sortedUsers.forEach((user, index) => {
-                        leaderboardList.innerHTML += `
-                            <div class="leaderboard-item">
-                                <div class="leaderboard-rank">${index + 1}</div>
-                                <img src="${user.avatar || 'https://i.pravatar.cc/50'}" alt="مستخدم" class="result-avatar">
-                                <div class="leaderboard-user">
-                                    <div class="result-name">${user.name}</div>
-                                    <div class="result-details">${user.role === 'teacher' ? 'أستاذ' : 'طالب'}</div>
-                                </div>
-                                <div class="leaderboard-score">${user.engagementPoints || 0} نقطة تفاعل</div>
-                            </div>`;
-                    });
-                });
-            }
-
-            // === 7. الأدوات (آلة حاسبة، ملاحظات، لوحة بيضاء) ===
+            // النوافذ
+            document.getElementById('create-post-nav-btn').onclick = () => document.getElementById('create-post-modal').classList.add('active');
+            document.getElementById('user-profile-btn').onclick = () => document.getElementById('profile-modal').classList.add('active');
+            document.getElementById('sticky-notes-btn').onclick = () => document.getElementById('sticky-notes-modal').classList.add('active');
+            document.getElementById('whiteboard-btn').onclick = () => document.getElementById('whiteboard-modal').classList.add('active');
+            document.getElementById('add-story-btn').onclick = () => document.getElementById('story-modal').classList.add('active');
+            document.getElementById('logout-btn').onclick = () => auth.signOut();
             
-            // (الآلة الحاسبة العلمية - الآمنة)
-            const calcDisplay = document.getElementById('calc-display');
-            let calcInput = '0';
+            document.querySelectorAll('.modal-close').forEach(b => b.onclick = function() { this.closest('.modal').classList.remove('active'); });
             
-            document.querySelectorAll('.calc-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const type = this.dataset.type;
-                    const val = this.dataset.val;
+            // اللغات
+            window.setLang = (lang) => {
+                if(lang === 'ar') document.dir = 'rtl'; else document.dir = 'ltr';
+                document.getElementById('lang-modal').classList.remove('active');
+            };
+            document.getElementById('lang-btn-login').onclick = () => document.getElementById('lang-modal').classList.add('active');
+            document.getElementById('lang-btn-app').onclick = () => document.getElementById('lang-modal').classList.add('active');
 
-                    try {
-                        if (type === 'num' || val === '(' || val === ')') {
-                            if (calcInput === '0') calcInput = val;
-                            else calcInput += val;
-                        } 
-                        else if (type === 'decimal') {
-                            if (!calcInput.includes(val)) calcInput += val;
-                        }
-                        else if (type === 'clear') {
-                            calcInput = '0';
-                        }
-                        else if (type === 'op') {
-                            if (calcInput === '0') return;
-                            calcInput += ` ${val} `; // إضافة مسافات
-                        }
-                        else if (type === 'op-sci') {
-                            calcInput = `${val}(${calcInput})`;
-                        }
-                        else if (type === 'equal') {
-                            calcInput = evaluateScientific(calcInput);
-                        }
-                        calcDisplay.textContent = calcInput;
-                    } catch (e) {
-                        calcInput = 'Error';
-                        calcDisplay.textContent = calcInput;
-                    }
-                });
-            });
-
-            function evaluateScientific(expression) {
-                // استبدال الرموز لتعمل مع Math
-                let evalFriendlyExpression = expression
-                    .replace(/√/g, 'Math.sqrt')
-                    .replace(/sin/g, 'Math.sin')
-                    .replace(/cos/g, 'Math.cos')
-                    .replace(/tan/g, 'Math.tan')
-                    .replace(/log/g, 'Math.log10')
-                    .replace(/ln/g, 'Math.log')
-                    .replace(/\^/g, '**')
-                    .replace(/!/g, 'factorial'); // استبدال العاملي بدالة خاصة
-                
-                // دالة العاملي (Factorial)
-                function factorial(n) {
-                    if (n < 0) return NaN;
-                    if (n === 0) return 1;
-                    let result = 1;
-                    for (let i = 2; i <= n; i++) result *= i;
-                    return result;
-                }
-                
-                // استخدام Function بدلاً من eval() لتقليل المخاطر قليلاً
-                // هذا لا يزال غير آمن 100% ولكنه أفضل من eval المباشر
-                return new Function('factorial', `return ${evalFriendlyExpression}`)(factorial);
-            }
-
-            // (الملاحظات اللاصقة - مع العنوان)
-            function loadStickyNotes() {
-                if (!currentUser) return;
-                const notesRef = db.ref('users/' + currentUser.uid + '/stickyNotes');
-                notesRef.on('value', (snapshot) => {
-                    const notes = snapshot.val();
-                    const container = document.getElementById('sticky-notes-container');
-                    container.innerHTML = '';
-                    if (!notes) return;
-                    Object.keys(notes).forEach(noteId => {
-                        createStickyNoteElement(notes[noteId], noteId);
-                    });
-                });
-            }
-            function createStickyNoteElement(note, noteId) {
-                const container = document.getElementById('sticky-notes-container');
-                const noteElement = document.createElement('div');
-                noteElement.className = 'sticky-note';
-                noteElement.innerHTML = `
-                    <div class="sticky-note-header">
-                        <input type="text" class="sticky-note-title" placeholder="عنوان..." value="${note.title || ''}">
-                        <div class="sticky-note-actions">
-                            <button class="sticky-note-action" data-action="delete">🗑️</button>
-                        </div>
-                    </div>
-                    <textarea class="sticky-note-content" placeholder="اكتب ملاحظتك...">${note.content || ''}</textarea>
-                `;
-                container.appendChild(noteElement);
-                
-                const titleInput = noteElement.querySelector('.sticky-note-title');
-                const contentInput = noteElement.querySelector('.sticky-note-content');
-                
-                noteElement.querySelector('[data-action="delete"]').addEventListener('click', () => deleteStickyNote(noteId));
-                titleInput.addEventListener('blur', () => saveStickyNote(noteId, titleInput.value, contentInput.value));
-                contentInput.addEventListener('blur', () => saveStickyNote(noteId, titleInput.value, contentInput.value));
-            }
-            document.getElementById('add-sticky-note').addEventListener('click', () => {
-                const newNoteRef = db.ref('users/' + currentUser.uid + '/stickyNotes').push();
-                newNoteRef.set({
-                    title: 'ملاحظة جديدة',
-                    content: '',
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            });
-            function saveStickyNote(noteId, title, content) {
-                db.ref('users/' + currentUser.uid + '/stickyNotes/' + noteId).update({ title: title, content: content });
-            }
-            function deleteStickyNote(noteId) {
-                db.ref('users/' + currentUser.uid + '/stickyNotes/' + noteId).remove();
-            }
-            
-            // (اللوحة البيضاء)
-            let whiteboardCanvas, ctx, drawing = false, tool = 'pen', color = '#000000', width = 3;
-            function initWhiteboard() {
-                if (whiteboardCanvas) return;
-                whiteboardCanvas = document.getElementById('whiteboard-canvas');
-                ctx = whiteboardCanvas.getContext('2d');
-                const container = whiteboardCanvas.parentElement;
-                
-                function resizeCanvas() {
-                    whiteboardCanvas.width = container.clientWidth;
-                    whiteboardCanvas.height = container.clientHeight;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = width;
-                }
-                resizeCanvas();
-                window.addEventListener('resize', resizeCanvas);
-
-                const events = {
-                    start: ['mousedown', 'touchstart'],
-                    stop: ['mouseup', 'touchend', 'mouseleave'],
-                    draw: ['mousemove', 'touchmove']
-                };
-                
-                events.start.forEach(e => whiteboardCanvas.addEventListener(e, startDrawing));
-                events.stop.forEach(e => whiteboardCanvas.addEventListener(e, stopDrawing));
-                events.draw.forEach(e => whiteboardCanvas.addEventListener(e, draw));
-                
-                document.querySelectorAll('.whiteboard-tool[data-tool]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelector('.whiteboard-tool.active').classList.remove('active');
-                        btn.classList.add('active');
-                        tool = btn.dataset.tool;
-                    });
-                });
-                document.getElementById('whiteboard-color').addEventListener('input', (e) => color = e.target.value);
-                document.getElementById('whiteboard-width').addEventListener('input', (e) => width = e.target.value);
-                document.getElementById('clear-whiteboard').addEventListener('click', () => ctx.clearRect(0, 0, whiteboardCanvas.width, whiteboardCanvas.height));
-            }
-            function getCoords(e) {
-                const rect = whiteboardCanvas.getBoundingClientRect();
-                if (e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            }
-            function startDrawing(e) {
-                drawing = true;
-                const { x, y } = getCoords(e);
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-            }
-            function stopDrawing() { drawing = false; ctx.beginPath(); }
-            function draw(e) {
-                if (!drawing) return;
-                e.preventDefault();
-                const { x, y } = getCoords(e);
-                ctx.lineWidth = (tool === 'eraser') ? width * 5 : width;
-                ctx.strokeStyle = (tool === 'eraser') ? '#FFFFFF' : color;
-                ctx.globalCompositeOperation = (tool === 'eraser') ? 'destination-out' : 'source-over';
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-            }
-
-            // === 8. دوال التفاعل الأساسية ===
-            
-            document.getElementById('search-input').addEventListener('input', function() {
-                const query = this.value.toLowerCase();
-                const type = document.querySelector('.search-tab.active').dataset.type;
-                searchUsers(query, type);
-            });
-            function searchUsers(query, type) {
-                const resultsContainer = document.getElementById('search-results');
-                if (query.length < 2) { resultsContainer.innerHTML = ''; return; }
-                
-                db.ref('users').orderByChild('name').startAt(query).endAt(query + '\uf8ff').once('value', (snapshot) => {
-                    resultsContainer.innerHTML = '';
-                    const users = snapshot.val();
-                    if (!users) return;
-                    Object.keys(users).forEach(uid => {
-                        if (uid === currentUser.uid) return;
-                        const user = users[uid];
-                        if (type === 'all' || (type === 'teachers' && user.role === 'teacher')) {
-                            addSearchResult(user, uid);
-                        }
-                    });
-                });
-            }
-            function addSearchResult(user, uid) {
-                const resultsContainer = document.getElementById('search-results');
-                const amFollowing = userData?.following?.[uid];
-                resultsContainer.innerHTML += `
-                    <div class="search-result">
-                        <img src="${user.avatar || 'https://i.pravatar.cc/50'}" alt="مستخدم" class="result-avatar">
-                        <div class="result-info">
-                            <div class="result-name">${user.name}</div>
-                            <div class="result-details">${user.role === 'teacher' ? 'أستاذ' : 'طالب'}</div>
-                        </div>
-                        <button class="follow-btn ${amFollowing ? 'following' : ''}" data-uid="${uid}">
-                            ${amFollowing ? 'إلغاء المتابعة' : 'متابعة'}
-                        </button>
-                    </div>`;
-            }
-
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('follow-btn')) {
-                    followUser(e.target.dataset.uid, e.target);
-                }
-                if (e.target.classList.contains('fa-heart')) {
-                    toggleLike(e.target.dataset.post, e.target);
-                }
-                if (e.target.classList.contains('report-btn')) {
-                    reportContent(e.target.dataset.post);
-                }
-            });
-
-            function followUser(targetUid, button) {
-                if (!currentUser) return;
-                const followingRef = db.ref(`users/${currentUser.uid}/following/${targetUid}`);
-                const followerRef = db.ref(`users/${targetUid}/followers/${currentUser.uid}`);
-                
-                followingRef.once('value').then(snapshot => {
-                    if (snapshot.exists()) {
-                        followingRef.remove();
-                        followerRef.remove();
-                        button.textContent = 'متابعة';
-                        button.classList.remove('following');
-                    } else {
-                        followingRef.set(true);
-                        followerRef.set(true);
-                        button.textContent = 'إلغاء المتابعة';
-                        button.classList.add('following');
-                    }
-                });
-            }
-
-            function toggleLike(postId, heartIcon) {
-                if (!currentUser) return;
-                const likeRef = db.ref('posts/' + postId + '/likes/' + currentUser.uid);
-                likeRef.once('value').then(snapshot => {
-                    if (snapshot.exists()) {
-                        likeRef.remove();
-                        heartIcon.classList.remove('liked');
-                    } else {
-                        likeRef.set(true);
-                        heartIcon.classList.add('liked');
-                        addEngagementPoints(1);
-                    }
-                });
-            }
-
-            function reportContent(postId) {
-                if (confirm('هل تريد الإبلاغ عن هذا المحتوى؟')) {
-                    db.ref('reports/' + postId).push({
-                        reporter: currentUser.uid,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    showNotification('شكراً لإبلاغك.', 'success');
-                }
-            }
-
-            // === 9. نظام الدردشة (مع الرسائل الصوتية) ===
-            
-            sendMessageBtn.addEventListener('click', () => {
-                const message = chatMessageInput.value.trim();
-                if (!message) return;
-                if (!isContentSafe(message)) return showNotification('رسالتك تحتوي كلمات ممنوعة', 'error');
-                
-                sendChatMessage({ type: 'text', content: message });
-                chatMessageInput.value = '';
-            });
-
-            function sendChatMessage(messageData) {
-                const chatRef = db.ref('chats/' + activeChat + '/messages');
-                chatRef.push({
-                    sender: currentUser.uid,
-                    senderName: userData.name,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP,
-                    ...messageData
-                });
-                addEngagementPoints(2);
-            }
-            
-            function loadMessages(chatId) {
-                const messagesContainer = document.getElementById('chat-messages');
-                db.ref('chats/' + chatId + '/messages').orderByChild('timestamp').limitToLast(50)
-                  .on('value', (snapshot) => {
-                    messagesContainer.innerHTML = '';
-                    const messages = snapshot.val();
-                    if (!messages) return;
-                    Object.keys(messages).forEach(messageId => {
-                        addMessageToChat(messages[messageId]);
-                    });
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                  });
-            }
-
-            function addMessageToChat(message) {
-                const messagesContainer = document.getElementById('chat-messages');
-                const msgElement = document.createElement('div');
-                const isSent = message.sender === currentUser.uid;
-                msgElement.className = `message ${isSent ? 'sent' : 'received'}`;
-                
-                if (message.type === 'audio') {
-                    msgElement.innerHTML = `
-                        <div style="font-weight: 500; font-size: 12px; margin-bottom: 5px;">${isSent ? 'أنت' : message.senderName}</div>
-                        <audio controls src="${message.audioUrl}"></audio>
-                    `;
-                } else {
-                    msgElement.textContent = message.content;
-                }
-                messagesContainer.appendChild(msgElement);
-            }
-            
-            recordAudioBtn.addEventListener('click', () => {
-                if (isRecording) {
-                    stopRecording();
-                } else {
-                    startRecording();
-                }
-            });
-
-            async function startRecording() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                    mediaRecorder.start();
-                    isRecording = true;
-                    audioChunks = [];
-                    
-                    recordAudioBtn.classList.add('recording');
-                    recordAudioBtn.innerHTML = '<i class="fas fa-stop"></i>';
-                    chatMessageInput.style.display = 'none';
-                    sendMessageBtn.style.display = 'none';
-                    recordingTimerDisplay.style.display = 'block';
-                    
-                    recordingStartTime = Date.now();
-                    const maxDuration = (isPremiumUser ? 15 : 5) * 60 * 1000;
-                    
-                    recordingTimerInterval = setInterval(() => {
-                        const elapsed = Date.now() - recordingStartTime;
-                        if (elapsed >= maxDuration) {
-                            showNotification(`تم الوصول للحد الأقصى (${isPremiumUser ? 15 : 5} دقيقة). جاري إرسال التسجيل...`, 'warning');
-                            stopRecording();
-                        } else {
-                            const minutes = Math.floor(elapsed / 60000);
-                            const seconds = Math.floor((elapsed % 60000) / 1000);
-                            recordingTimerDisplay.textContent = 
-                                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                        }
-                    }, 1000);
-
-                    mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
-                    };
-
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        uploadAudioMessage(audioBlob);
-                        
-                        stream.getTracks().forEach(track => track.stop());
-                        audioChunks = [];
-                        clearInterval(recordingTimerInterval);
-                        
-                        recordAudioBtn.classList.remove('recording');
-                        recordAudioBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-                        chatMessageInput.style.display = 'block';
-                        sendMessageBtn.style.display = 'block';
-                        recordingTimerDisplay.style.display = 'none';
-                        recordingTimerDisplay.textContent = '00:00';
-                    };
-                    
-                } catch (err) {
-                    showNotification('لا يمكن الوصول إلى المايكروفون. يرجى إعطاء الإذن.', 'error');
-                }
-            }
-
-            function stopRecording() {
-                if (mediaRecorder && isRecording) {
-                    mediaRecorder.stop();
-                    isRecording = false;
-                }
-            }
-            
-            function uploadAudioMessage(audioBlob) {
-                showNotification('جاري رفع الرسالة الصوتية...', 'success');
-                const fileRef = storage.ref(`audioMessages/${currentUser.uid}/${Date.now()}.webm`);
-                const uploadTask = fileRef.put(audioBlob);
-
-                uploadTask.on('state_changed', null, 
-                    (error) => showNotification('خطأ في رفع الصوت: ' + error.message, 'error'),
-                    () => {
-                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                            sendChatMessage({
-                                type: 'audio',
-                                audioUrl: downloadURL
-                            });
-                        });
-                    }
-                );
-            }
-
-            // === 10. إعدادات الملف الشخصي (جديد) ===
-            logoutBtn.addEventListener('click', () => {
-                if (confirm('هل أنت متأكد أنك تريد تسجيل الخروج؟')) {
-                    auth.signOut();
-                    profileModal.classList.remove('active');
-                }
-            });
-
-            editProfileBtn.addEventListener('click', () => {
-                document.getElementById('edit-name-input').value = userData.name;
-                document.getElementById('edit-username-input').value = userData.username;
-                document.getElementById('edit-bio-input').value = userData.bio || '';
-                document.getElementById('edit-avatar-preview').src = userData.avatar || 'https://i.pravatar.cc/80';
-                editProfileModal.classList.add('active');
-            });
-            
-            document.getElementById('change-avatar-btn').addEventListener('click', () => {
-                document.getElementById('edit-avatar-input').click();
-            });
-            
-            document.getElementById('edit-avatar-input').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        document.getElementById('edit-avatar-preview').src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            document.getElementById('save-profile-btn').addEventListener('click', function() {
-                this.disabled = true;
-                this.textContent = 'جاري الحفظ...';
-                
-                const name = document.getElementById('edit-name-input').value;
-                const username = document.getElementById('edit-username-input').value;
-                const bio = document.getElementById('edit-bio-input').value;
-                const file = document.getElementById('edit-avatar-input').files[0];
-                
-                const updates = {
-                    name: name,
-                    username: username,
-                    bio: bio,
-                    profileComplete: true
-                };
-
-                if (file) {
-                    const avatarRef = storage.ref(`avatars/${currentUser.uid}/${file.name}`);
-                    avatarRef.put(file).then(snapshot => {
-                        return snapshot.ref.getDownloadURL();
-                    }).then(downloadURL => {
-                        updates.avatar = downloadURL;
-                        updateUserProfile(updates);
-                    }).catch(err => {
-                        showNotification('خطأ في رفع الصورة: ' + err.message, 'error');
-                        this.disabled = false;
-                        this.textContent = 'حفظ التغييرات';
-                    });
-                } else {
-                    updateUserProfile(updates);
-                }
-            });
-            
-            function updateUserProfile(updates) {
-                db.ref('users/' + currentUser.uid).update(updates)
-                    .then(() => {
-                        showNotification('تم حفظ التغييرات!', 'success');
-                        editProfileModal.classList.remove('active');
-                        document.getElementById('save-profile-btn').disabled = false;
-                        document.getElementById('save-profile-btn').textContent = 'حفظ التغييرات';
-                    })
-                    .catch(err => {
-                        showNotification('خطأ: ' + err.message, 'error');
-                        document.getElementById('save-profile-btn').disabled = false;
-                        document.getElementById('save-profile-btn').textContent = 'حفظ التغييرات';
-                    });
-            }
-
-            // === 11. أدوات مساعدة والتنقل ===
-            function formatTime(timestamp) {
-                if (!timestamp) return '...';
-                const now = Date.now();
-                const diff = now - timestamp;
-                if (diff < 60000) return 'الآن';
-                if (diff < 3600000) return `منذ ${Math.floor(diff / 60000)} دقيقة`;
-                if (diff < 86400000) return `منذ ${Math.floor(diff / 3600000)} ساعة`;
-                return `منذ ${Math.floor(diff / 86400000)} يوم`;
-            }
-            function showNotification(message, type) { alert(message); }
-            function isFriend(uid) { return userData?.following?.[uid]; }
-            function isContentSafe(content) {
-                if (!content) return true;
-                const bannedWords = ['بذيء', 'تحرش', 'عنف', 'تهديد'];
-                return !bannedWords.some(word => content.toLowerCase().includes(word));
-            }
-            
-            function showPage(targetPageId) {
-                pages.forEach(page => page.style.display = 'none');
-                const targetPage = document.getElementById(targetPageId);
-                if (targetPage) targetPage.style.display = 'block';
-                
-                navItems.forEach(nav => {
-                    nav.classList.toggle('active', nav.dataset.page === targetPageId);
-                });
-
-                if (targetPageId === 'chat-page') loadMessages(activeChat);
-                if (targetPageId === 'leaderboard-page') loadLeaderboard();
-            }
-
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetPageId = this.getAttribute('data-page');
-                    if (targetPageId) showPage(targetPageId);
-                });
-            });
-            
-            document.querySelectorAll('.search-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelector('.search-tab.active').classList.remove('active');
-                    this.classList.add('active');
-                    searchUsers(document.getElementById('search-input').value, this.dataset.type);
-                });
-            });
-            
-            // فتح النوافذ المنبثقة للأدوات
-            userProfileBtn.addEventListener('click', () => profileModal.classList.add('active'));
-            createPostNavBtn.addEventListener('click', (e) => { e.preventDefault(); createPostModal.classList.add('active'); });
-            calculatorBtn.addEventListener('click', () => calculatorModal.classList.add('active'));
-            fahmiAiBtn.addEventListener('click', () => fahmiAiModal.classList.add('active'));
-            stickyNotesBtn.addEventListener('click', () => { loadStickyNotes(); stickyNotesModal.classList.add('active'); });
-            whiteboardBtn.addEventListener('click', () => { whiteboardModal.classList.add('active'); initWhiteboard(); });
-            messagesBtn.addEventListener('click', () => showPage('chat-page'));
-            upgradeBtn.addEventListener('click', () => upgradeModal.classList.add('active'));
-            editProfileBtn.addEventListener('click', () => editProfileModal.classList.add('active'));
-            
-            document.querySelectorAll('.modal-close').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.getElementById(this.dataset.modal).classList.remove('active');
-                });
-            });
-
-            // إظهار الصفحة الرئيسية أولاً
             showPage('home-page');
+            function showPage(p) {
+                document.getElementById('home-page').style.display = (p==='home-page') ? 'block' : 'none';
+            }
+            navItems.forEach(item => item.onclick = (e) => { e.preventDefault(); showPage(item.dataset.page); });
         });
     </script>
 </body>
